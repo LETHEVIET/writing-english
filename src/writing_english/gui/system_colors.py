@@ -56,13 +56,8 @@ def get_system_theme() -> str:
 
 
 def get_chrome_colors(theme: str) -> tuple[str, str]:
-    """Return (background, foreground) colors for app chrome.
-
-    Dark theme always uses its own dark chrome. Light theme tries to match
-    the OS title bar, falling back to palette() values.
-    """
     if theme == "dark":
-        return ("#252526", "#D4D4D4")
+        return ("#2A2E32", "#EFF0F1")
     bg, fg = _read_kde_wm_colors()
     if bg and fg:
         return (bg, fg)

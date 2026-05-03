@@ -1,4 +1,4 @@
-/* Light Theme - iA Writer Inspired with Unified Header */
+/* Light Theme - KWrite / KDE Breeze */
 
 /* === MAIN WINDOW === */
 QMainWindow {
@@ -33,12 +33,12 @@ QMenuBar::item {
 }
 
 QMenuBar::item:selected {
-    background-color: #ECECEC;
+    background-color: #E8E8E8;
 }
 
 QMenu {
     background-color: #FFFFFF;
-    border: 1px solid #DDDDDD;
+    border: 1px solid #D4D4D4;
     padding: 4px;
 }
 
@@ -48,50 +48,52 @@ QMenu::item {
 }
 
 QMenu::item:selected {
-    background-color: #EFEFEF;
+    background-color: #EFF0F1;
+    color: #232629;
 }
 
 QMenu::separator {
     height: 1px;
-    background-color: #ECECEC;
+    background-color: #D4D4D4;
     margin: 4px 8px;
 }
 
 /* === PROMPT BAR === */
 QWidget#promptBar {
     background-color: @chrome-bg@;
-    border-bottom: 1px solid palette(mid);
+    border-bottom: 1px solid #D4D4D4;
     margin: 0px;
     padding: 0px;
 }
 
 QLabel#promptBarLabel {
-    color: #B5B5B5;
+    color: #A4A4A4;
     margin-right: 2px;
 }
 
 QPlainTextEdit#promptBarInput {
     background-color: @chrome-bg@;
     border: none;
-    color: #2A2A2A;
-    selection-background-color: #B4D7FF;
+    color: #232629;
+    selection-background-color: #3DAEE9;
+    selection-color: #FFFFFF;
     padding: 4px 0;
     margin: 0;
 }
 
 QPlainTextEdit#promptBarInput::placeholder {
-    color: #AAAAAA;
+    color: #A4A4A4;
 }
 
 QPlainTextEdit#promptBarInput:focus {
-    color: #1A1A1A;
+    color: #232629;
 }
 
 /* === STATUS BAR === */
 QStatusBar {
     background-color: @chrome-bg@;
-    border-top: 1px solid palette(mid);
-    color: palette(mid);
+    border-top: 1px solid #D4D4D4;
+    color: #7A7C7F;
     font-size: 11px;
     margin: 0px;
     padding: 0px;
@@ -102,7 +104,7 @@ QStatusBar::item {
 }
 
 QStatusBar QLabel {
-    color: #888888;
+    color: #7A7C7F;
     padding: 0 10px;
     font-size: 11px;
 }
@@ -116,22 +118,22 @@ QStatusBar QToolButton#statusBarButton {
 }
 
 QStatusBar QToolButton#statusBarButton:hover {
-    background-color: #ECECEC;
+    background-color: #E8E8E8;
 }
 
 QStatusBar QToolButton#statusBarButton:checked {
-    background-color: #E0EAF5;
+    background-color: #D4E8FA;
 }
 
 QStatusBar QToolButton#statusBarButton:checked:hover {
-    background-color: #D0E0F0;
+    background-color: #BDD8F0;
 }
 
 /* === TOOLTIPS === */
 QToolTip {
-    background-color: #2A2A2A;
-    color: #FAFAFA;
-    border: none;
+    background-color: #232629;
+    color: #EFF0F1;
+    border: 1px solid #5A5A5A;
     padding: 4px 8px;
     font-size: 12px;
 }
@@ -145,14 +147,14 @@ QScrollBar:vertical {
 }
 
 QScrollBar::handle:vertical {
-    background-color: #D6D6D6;
+    background-color: #C8C8C8;
     min-height: 30px;
     border-radius: 5px;
     margin: 2px;
 }
 
 QScrollBar::handle:vertical:hover {
-    background-color: #B0B0B0;
+    background-color: #A4A4A4;
 }
 
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
@@ -171,16 +173,123 @@ QScrollBar:horizontal {
 }
 
 QScrollBar::handle:horizontal {
-    background-color: #D6D6D6;
+    background-color: #C8C8C8;
     min-width: 30px;
     border-radius: 5px;
     margin: 2px;
 }
 
 QScrollBar::handle:horizontal:hover {
-    background-color: #B0B0B0;
+    background-color: #A4A4A4;
 }
 
 QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
     width: 0;
+}
+
+/* === ANALYSIS PANEL (KWrite-style bottom panel) === */
+QWidget#analysisWidget {
+    background-color: #F8F8F8;
+}
+
+QWidget#analysisResizeHandle {
+    background-color: #D4D4D4;
+}
+
+QWidget#analysisResizeHandle:hover {
+    background-color: #3DAEE9;
+}
+
+QWidget#analysisHeader {
+    background-color: @chrome-bg@;
+}
+
+QLabel#analysisCategory {
+    font-weight: bold;
+}
+
+QLabel#analysisMessage {
+    color: #7A7C7F;
+    font-style: italic;
+}
+
+QLabel#analysisOriginal {
+    color: #DA4453;
+    text-decoration: line-through;
+}
+
+QLabel#analysisArrow {
+    color: #888888;
+}
+
+QLabel#analysisSuggestion {
+    color: #27AE60;
+}
+
+QLabel#analysisCountBadge {
+    background-color: #F67400;
+    color: #FFFFFF;
+    border-radius: 8px;
+    padding: 1px 6px;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+QLabel#analysisEmptyLabel {
+    color: #A4A4A4;
+    font-style: italic;
+}
+
+QFrame#analysisErrorRow {
+    background-color: #FFFFFF;
+    border: 1px solid #E8E8E8;
+    border-radius: 4px;
+}
+
+QPushButton#analysisFixButton {
+    background-color: #E8F5E9;
+    color: #2E7D32;
+    border: 1px solid #A5D6A7;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+QPushButton#analysisFixButton:hover {
+    background-color: #C8E6C9;
+}
+
+QPushButton#analysisClearButton {
+    background-color: transparent;
+    color: #7A7C7F;
+    border: 1px solid #D4D4D4;
+    border-radius: 3px;
+    font-size: 11px;
+}
+
+QPushButton#analysisClearButton:hover {
+    background-color: #F0F0F0;
+    color: #232629;
+}
+
+QPushButton#analysisCloseButton {
+    background-color: transparent;
+    border: none;
+    border-radius: 3px;
+}
+
+QPushButton#analysisCloseButton:hover {
+    background-color: #E8E8E8;
+}
+
+QFrame#analysisSeparator {
+    color: #D4D4D4;
+}
+
+QSplitter::handle {
+    background-color: #D4D4D4;
+}
+
+QSplitter::handle:hover {
+    background-color: #3DAEE9;
 }

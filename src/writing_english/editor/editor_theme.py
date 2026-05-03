@@ -1,3 +1,5 @@
+"""KDE Breeze-inspired color palettes."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -12,26 +14,32 @@ class EditorColors:
     accent: str
     line_number: str
     cursor: str
+    spell_underline: str
+    gec_underline: str
 
 
 LIGHT_THEME = EditorColors(
-    background="#FAFAFA",
-    text="#1A1A1A",
-    prompt_bg="#F0F0F0",
+    background="#FFFFFF",
+    text="#232629",
+    prompt_bg="#F8F8F8",
     status_bg="#EAEAEA",
-    accent="#B4D7FF",
-    line_number="#C0C0C0",
-    cursor="#1A1A1A",
+    accent="#3DAEE9",
+    line_number="#A4A4A4",
+    cursor="#232629",
+    spell_underline="#DA4453",
+    gec_underline="#F67400",
 )
 
 DARK_THEME = EditorColors(
-    background="#1E1E1E",
-    text="#D4D4D4",
-    prompt_bg="#252526",
-    status_bg="#2D2D30",
-    accent="#264F78",
-    line_number="#6E6E6E",
-    cursor="#D4D4D4",
+    background="#232629",
+    text="#EFF0F1",
+    prompt_bg="#2A2E32",
+    status_bg="#2A2E32",
+    accent="#3DAEE9",
+    line_number="#7A7C7F",
+    cursor="#EFF0F1",
+    spell_underline="#DA4453",
+    gec_underline="#F67400",
 )
 
 

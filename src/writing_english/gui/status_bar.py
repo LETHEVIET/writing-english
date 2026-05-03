@@ -33,6 +33,7 @@ class StatusBarButton(QToolButton):
 
 class StatusBar(QStatusBar):
     spell_check_toggled = Signal(bool)
+    grammar_check_triggered = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -65,6 +66,11 @@ class StatusBar(QStatusBar):
             "spell_check", "spell-check", "Spell check", checkable=True
         )
         spell_btn.toggled.connect(self.spell_check_toggled)
+
+        grammar_btn = self._add_button(
+            "grammar_check", "grammar-check", "Grammar check", checkable=False
+        )
+        grammar_btn.clicked.connect(self.grammar_check_triggered)
 
         # --- stats / mode labels ---
         self.addPermanentWidget(self._words_label)
@@ -105,3 +111,15 @@ class StatusBar(QStatusBar):
         btn.blockSignals(True)
         btn.setChecked(enabled)
         btn.blockSignals(False)
+
+    def set_grammar_loading(self, loading: bool) -> None:
+        btn = self._buttons.get("grammar_check")
+        if btn is None:
+            return
+        btn.setEnabled(not loading)
+        if loading:
+            btn.setIcon(load_svg_icon("grammar-check", color="#F67400"))
+            btn.setToolTip("Checking grammar...")
+        else:
+            btn.setIcon(load_svg_icon("grammar-check", color="#7A7C7F"))
+            btn.setToolTip("Grammar check")

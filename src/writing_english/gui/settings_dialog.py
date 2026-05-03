@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from pathlib import Path
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QDialog,
     QVBoxLayout,
@@ -12,8 +14,14 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QDialogButtonBox,
     QWidget,
+    QLineEdit,
+    QPushButton,
+    QFileDialog,
+    QMessageBox,
+    QLabel,
 )
 
+from writing_english.app.constants import SETTINGS_PATH
 from writing_english.config.settings import Settings
 
 
@@ -88,12 +96,45 @@ class SettingsDialog(QDialog):
 
         layout.addWidget(general_group)
 
+        storage_group = QGroupBox("Storage")
+        storage_layout = QFormLayout(storage_group)
+
+        app_data_row = QWidget()
+        app_data_layout = QVBoxLayout(app_data_row)
+        app_data_layout.setContentsMargins(0, 0, 0, 0)
+        self._app_data_dir = QLineEdit()
+        self._app_data_dir.setReadOnly(True)
+        app_data_layout.addWidget(self._app_data_dir)
+        browse_btn = QPushButton("Browse...")
+        browse_btn.clicked.connect(self._on_browse_app_data_dir)
+        app_data_layout.addWidget(browse_btn)
+        storage_layout.addRow("App Data Directory:", app_data_row)
+
+        self._settings_path_label = QLabel()
+        self._settings_path_label.setWordWrap(True)
+        self._settings_path_label.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        storage_layout.addRow("Settings File:", self._settings_path_label)
+
+        layout.addWidget(storage_group)
+
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
         buttons.accepted.connect(self._on_accept)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
+
+    def _on_browse_app_data_dir(self) -> None:
+        path = QFileDialog.getExistingDirectory(
+            self,
+            "Select App Data Directory",
+            self._app_data_dir.text() or str(Path.home()),
+        )
+        if path:
+            self._app_data_dir.setText(path)
+            self._settings_path_label.setText(str(Path(path) / "settings.ini"))
 
     def _load_values(self) -> None:
         self._font_family.setCurrentText(self._settings.font_family)
@@ -104,6 +145,8 @@ class SettingsDialog(QDialog):
         self._spell_check.setChecked(self._settings.spell_check)
         self._theme.setCurrentText(self._settings.theme)
         self._autosave_interval.setValue(self._settings.autosave_interval_ms // 1000)
+        self._app_data_dir.setText(self._settings.app_data_dir)
+        self._settings_path_label.setText(str(SETTINGS_PATH))
 
     def _on_accept(self) -> None:
         self._settings.font_family = self._font_family.currentText()
@@ -113,6 +156,18 @@ class SettingsDialog(QDialog):
         self._settings.show_line_numbers = self._show_line_numbers.isChecked()
         self._settings.spell_check = self._spell_check.isChecked()
         self._settings.theme = self._theme.currentText()
+        self._settings.theme = self._theme.currentText()
         self._settings.autosave_interval_ms = self._autosave_interval.value() * 1000
+
+        new_app_data_dir = self._app_data_dir.text()
+        if new_app_data_dir != self._settings.app_data_dir:
+            self._settings.app_data_dir = new_app_data_dir
+            QMessageBox.information(
+                self,
+                "Restart Required",
+                "The app data directory has been changed.\n"
+                "Please restart the application for the change to take effect.",
+            )
+
         self._settings.sync()
         self.accept()

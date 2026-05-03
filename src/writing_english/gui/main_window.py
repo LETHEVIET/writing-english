@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import Slot
+from PySide6.QtCore import QSettings, Slot
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QMainWindow,
@@ -11,10 +11,11 @@ from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QApplication,
+    QDialog,
 )
 
 from writing_english.app.context import AppContext
-from writing_english.app.constants import APP_NAME
+from writing_english.app.constants import APP_NAME, GECTOR_ONNX_DIR
 from writing_english.core.document import Document
 from writing_english.editor.editor_widget import EditorWidget
 from writing_english.editor.editor_theme import get_colors
@@ -24,6 +25,9 @@ from writing_english.gui.status_bar import StatusBar
 from writing_english.gui.system_colors import get_chrome_colors, get_system_theme
 from writing_english.gui.focus_mode import FocusModeOverlay
 from writing_english.gui.settings_dialog import SettingsDialog
+from writing_english.gui.analysis_widget import AnalysisWidget
+from writing_english.adapters.gec.gector_adapter import GectorAdapter
+from writing_english.editor.grammar_controller import GrammarCheckController
 from writing_english.infrastructure.autosave import AutosaveManager
 
 
@@ -33,6 +37,7 @@ class MainWindow(QMainWindow):
         self._ctx = context
         self._document = Document()
         self._focus_mode_active = False
+        self._analysis_was_visible = False
 
         self._setup_window()
         self._create_widgets()
@@ -49,26 +54,42 @@ class MainWindow(QMainWindow):
     def _create_widgets(self) -> None:
         central = QWidget()
         self.setCentralWidget(central)
-        layout = QVBoxLayout(central)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        main_layout = QVBoxLayout(central)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
 
         self._menu_bar = MenuBar(self)
         self.setMenuBar(self._menu_bar)
 
         self._prompt_bar = PromptBar(self)
-        layout.addWidget(self._prompt_bar)
+        main_layout.addWidget(self._prompt_bar)
 
         self._editor = EditorWidget(self)
-        layout.addWidget(self._editor, 1)
+        main_layout.addWidget(self._editor, 1)
+
+        self._analysis = AnalysisWidget(self)
+        self._analysis.hide()
+        main_layout.addWidget(self._analysis)
 
         self._status_bar = StatusBar(self)
         self.setStatusBar(self._status_bar)
 
         self._focus_overlay = FocusModeOverlay(self)
 
+        model_dir = (
+            Path(self._ctx.settings.gector_model_dir)
+            if self._ctx.settings.gector_model_dir
+            else GECTOR_ONNX_DIR
+        )
+        self._gector_adapter = GectorAdapter(model_dir=model_dir)
+        self._grammar_ctrl = GrammarCheckController(
+            self._editor, self._editor._highlighter, self._gector_adapter, parent=self
+        )
+
         self._autosave = AutosaveManager(self)
         self._autosave.set_document(self._document)
+
+        self._restore_layout()
 
     def _connect_signals(self) -> None:
         self._editor.cursor_position.connect(self._status_bar.update_cursor)
@@ -76,9 +97,20 @@ class MainWindow(QMainWindow):
         self._editor.overwrite_mode_changed.connect(self._status_bar.set_overwrite_mode)
         self._editor.textChanged.connect(self._on_text_changed)
         self._status_bar.spell_check_toggled.connect(self._on_spell_check_toggled)
+        self._status_bar.grammar_check_triggered.connect(
+            self._on_grammar_check_triggered
+        )
+        self._grammar_ctrl.check_started.connect(self._on_grammar_check_started)
+        self._grammar_ctrl.check_finished.connect(self._on_grammar_check_finished)
+        self._grammar_ctrl.results_ready.connect(self._on_grammar_results_ready)
+        self._grammar_ctrl.status_changed.connect(self._status_bar.showMessage)
+        self._analysis.correction_clicked.connect(self._apply_grammar_correction)
+        self._analysis.close_requested.connect(self._hide_analysis)
         self._prompt_bar.prompt_changed.connect(self._on_prompt_edited)
         self._focus_overlay.exit_focus.connect(self.toggle_focus_mode)
-        self._app().styleHints().colorSchemeChanged.connect(self._on_system_theme_changed)
+        self._app().styleHints().colorSchemeChanged.connect(
+            self._on_system_theme_changed
+        )
 
     def _connect_actions(self) -> None:
         self._connect_action("new", self.new_document)
@@ -193,12 +225,16 @@ class MainWindow(QMainWindow):
     def toggle_focus_mode(self) -> None:
         self._focus_mode_active = not self._focus_mode_active
         if self._focus_mode_active:
+            self._analysis_was_visible = self._analysis.isVisible()
             self._status_bar.hide()
             self._menu_bar.hide()
+            self._analysis.hide()
             self._focus_overlay.enter_focus_mode()
         else:
             self._status_bar.show()
             self._menu_bar.show()
+            if self._analysis_was_visible:
+                self._analysis.show()
             self._focus_overlay.exit_focus_mode()
 
     def toggle_line_numbers(self) -> None:
@@ -235,7 +271,9 @@ class MainWindow(QMainWindow):
                 return
             if ret == QMessageBox.StandardButton.Save:
                 self.save_document()
+        self._grammar_ctrl.shutdown()
         self._autosave.stop()
+        self._save_layout()
         self._ctx.database.close()
         event.accept()
 
@@ -275,6 +313,68 @@ class MainWindow(QMainWindow):
         self._ctx.settings.sync()
 
     @Slot()
+    def _on_grammar_check_triggered(self) -> None:
+        if not self._gector_adapter.is_available():
+            from writing_english.gui.model_setup_dialog import ModelSetupDialog
+
+            dialog = ModelSetupDialog(self._ctx.settings, self)
+            if dialog.exec() != QDialog.DialogCode.Accepted:
+                return
+            model_dir = Path(self._ctx.settings.gector_model_dir)
+            self._gector_adapter = GectorAdapter(model_dir=model_dir)
+            self._grammar_ctrl.set_adapter(self._gector_adapter)
+            if not self._gector_adapter.is_available():
+                self._status_bar.showMessage(
+                    "Grammar check unavailable — model setup failed"
+                )
+                return
+        self._analysis.show()
+        self._grammar_ctrl.check_now()
+
+    @Slot()
+    def _on_grammar_check_started(self) -> None:
+        self._status_bar.set_grammar_loading(True)
+        self._status_bar.showMessage("Checking grammar...")
+
+    @Slot()
+    def _on_grammar_check_finished(self) -> None:
+        self._status_bar.set_grammar_loading(False)
+        self._status_bar.clearMessage()
+
+    def _on_grammar_results_ready(self, errors: list) -> None:
+        self._analysis.show()
+        self._analysis.set_grammar_results(errors)
+
+    @Slot(int, int, str)
+    def _apply_grammar_correction(
+        self, start: int, length: int, suggestion: str
+    ) -> None:
+        from PySide6.QtGui import QTextCursor
+
+        cursor = QTextCursor(self._editor.document())
+        cursor.setPosition(start)
+        cursor.setPosition(start + length, QTextCursor.MoveMode.KeepAnchor)
+        cursor.insertText(suggestion)
+
+    def _hide_analysis(self) -> None:
+        self._analysis.hide()
+        self._analysis.clear_grammar_results()
+
+    def _save_layout(self) -> None:
+        s = QSettings("WritingEnglish", "Writing English")
+        s.beginGroup("MainWindow")
+        s.setValue("geometry", self.saveGeometry())
+        s.endGroup()
+
+    def _restore_layout(self) -> None:
+        s = QSettings("WritingEnglish", "Writing English")
+        s.beginGroup("MainWindow")
+        geo = s.value("geometry")
+        if geo is not None:
+            self.restoreGeometry(geo)
+        s.endGroup()
+
+    @Slot()
     def _on_system_theme_changed(self) -> None:
         if self._ctx.settings.theme == "system":
             self._apply_theme()
@@ -301,6 +401,8 @@ class MainWindow(QMainWindow):
             self._app().setStyleSheet(qss_text)
 
         self._editor.apply_theme(colors)
+        self._editor._highlighter.set_spell_enabled_color(colors.spell_underline)
+        self._editor._highlighter.set_gec_underline_color(colors.gec_underline)
 
     def _apply_editor_settings(self) -> None:
         settings = self._ctx.settings

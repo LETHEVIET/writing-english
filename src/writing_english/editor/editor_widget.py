@@ -3,6 +3,7 @@ from __future__ import annotations
 from PySide6.QtCore import Qt, Signal, QRect
 from PySide6.QtGui import (
     QColor,
+    QContextMenuEvent,
     QFont,
     QPalette,
     QResizeEvent,
@@ -13,6 +14,7 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import QPlainTextEdit, QWidget
 
+from writing_english.adapters.base import GECError
 from writing_english.editor.editor_highlighter import EditorHighlighter
 from writing_english.editor.editor_theme import EditorColors
 from writing_english.editor.line_number_area import LineNumberArea
@@ -112,6 +114,36 @@ class EditorWidget(QPlainTextEdit):
 
     def set_spell_check(self, enabled: bool) -> None:
         self._highlighter.set_spell_check(enabled)
+
+    def set_grammar_check(self, enabled: bool) -> None:
+        self._highlighter.set_gec_enabled(enabled)
+
+    def contextMenuEvent(self, event: QContextMenuEvent) -> None:
+        menu = self.createStandardContextMenu()
+        cursor = self.cursorForPosition(event.pos())
+        pos = cursor.position()
+        for err in self._highlighter.gec_errors:
+            if err["start"] <= pos < err["start"] + err["length"]:
+                actions = menu.actions()
+                if actions:
+                    menu.insertSeparator(actions[0])
+                category = err.get("category", "Grammar")
+                action = menu.addAction(
+                    f'{category}: Change "{err["original"]}" → "{err["suggestion"]}"'
+                )
+                action.triggered.connect(
+                    lambda _checked=False, e=err: self._apply_gec_correction(e)
+                )
+                break
+        menu.exec(event.globalPos())
+
+    def _apply_gec_correction(self, err: GECError) -> None:
+        cursor = QTextCursor(self.document())
+        cursor.setPosition(err["start"])
+        cursor.setPosition(
+            err["start"] + err["length"], QTextCursor.MoveMode.KeepAnchor
+        )
+        cursor.insertText(err["suggestion"])
 
     def set_show_line_numbers(self, visible: bool) -> None:
         self._show_line_numbers = visible

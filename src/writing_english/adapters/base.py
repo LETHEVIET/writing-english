@@ -1,15 +1,24 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 if TYPE_CHECKING:
     pass
 
 
+class GECError(TypedDict):
+    start: int
+    length: int
+    original: str
+    suggestion: str
+    message: str
+    category: str
+
+
 class GECAdapter(ABC):
     @abstractmethod
-    def check(self, text: str) -> list[dict[str, object]]: ...
+    def check(self, text: str) -> list[GECError]: ...
 
     @abstractmethod
     def is_available(self) -> bool: ...
