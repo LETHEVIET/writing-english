@@ -21,8 +21,7 @@ from writing_english.editor.editor_theme import get_colors
 from writing_english.gui.menu_bar import MenuBar
 from writing_english.gui.prompt_bar import PromptBar
 from writing_english.gui.status_bar import StatusBar
-from writing_english.gui.system_colors import get_chrome_colors
-from writing_english.gui.toolbar import Toolbar
+from writing_english.gui.system_colors import get_chrome_colors, get_system_theme
 from writing_english.gui.focus_mode import FocusModeOverlay
 from writing_english.gui.settings_dialog import SettingsDialog
 from writing_english.infrastructure.autosave import AutosaveManager
@@ -39,6 +38,7 @@ class MainWindow(QMainWindow):
         self._create_widgets()
         self._connect_signals()
         self._apply_theme()
+        self._apply_editor_settings()
         self._connect_actions()
 
     def _setup_window(self) -> None:
@@ -55,11 +55,6 @@ class MainWindow(QMainWindow):
 
         self._menu_bar = MenuBar(self)
         self.setMenuBar(self._menu_bar)
-
-        self._toolbar = Toolbar(self)
-        self._toolbar.setMovable(False)
-        self._toolbar.setFloatable(False)
-        self.addToolBar(self._toolbar)
 
         self._prompt_bar = PromptBar(self)
         layout.addWidget(self._prompt_bar)
@@ -82,6 +77,7 @@ class MainWindow(QMainWindow):
         self._editor.textChanged.connect(self._on_text_changed)
         self._prompt_bar.prompt_changed.connect(self._on_prompt_edited)
         self._focus_overlay.exit_focus.connect(self.toggle_focus_mode)
+        self._app().styleHints().colorSchemeChanged.connect(self._on_system_theme_changed)
 
     def _connect_actions(self) -> None:
         self._connect_action("new", self.new_document)
@@ -97,14 +93,6 @@ class MainWindow(QMainWindow):
         self._connect_action("toggle_word_wrap", self.toggle_word_wrap)
         self._connect_action("settings", self.open_settings)
         self._connect_action("about", self.show_about)
-
-        self._toolbar.new_btn.clicked.connect(self.new_document)
-        self._toolbar.open_btn.clicked.connect(self.open_document)
-        self._toolbar.save_btn.clicked.connect(self.save_document)
-        self._toolbar.save_as_btn.clicked.connect(self.save_document_as)
-        self._toolbar.undo_btn.clicked.connect(self._editor.undo)
-        self._toolbar.redo_btn.clicked.connect(self._editor.redo)
-        self._toolbar.prompt_btn.clicked.connect(self.set_prompt)
 
     def _connect_action(self, name: str, slot: object) -> None:
         action = self._menu_bar.get_action(name)
@@ -204,12 +192,10 @@ class MainWindow(QMainWindow):
     def toggle_focus_mode(self) -> None:
         self._focus_mode_active = not self._focus_mode_active
         if self._focus_mode_active:
-            self._toolbar.hide()
             self._status_bar.hide()
             self._menu_bar.hide()
             self._focus_overlay.enter_focus_mode()
         else:
-            self._toolbar.show()
             self._status_bar.show()
             self._menu_bar.show()
             self._focus_overlay.exit_focus_mode()
@@ -281,8 +267,14 @@ class MainWindow(QMainWindow):
             self._document.is_modified = True
             self._update_title()
 
+    @Slot()
+    def _on_system_theme_changed(self) -> None:
+        if self._ctx.settings.theme == "system":
+            self._apply_theme()
+
     def _apply_theme(self) -> None:
-        theme_name = self._ctx.settings.theme
+        theme_setting = self._ctx.settings.theme
+        theme_name = get_system_theme() if theme_setting == "system" else theme_setting
         colors = get_colors(theme_name)
 
         if theme_name == "dark":
@@ -301,18 +293,7 @@ class MainWindow(QMainWindow):
             qss_text = qss_text.replace("@chrome-fg@", chrome_fg)
             self._app().setStyleSheet(qss_text)
 
-        self._editor.setStyleSheet(
-            f"""
-            QPlainTextEdit {{
-                background-color: {colors.background};
-                color: {colors.text};
-                selection-background-color: {colors.accent};
-                border: none;
-                margin: 0px;
-                padding: 0px;
-            }}
-        """
-        )
+        self._editor.apply_theme(colors)
 
     def _apply_editor_settings(self) -> None:
         settings = self._ctx.settings

@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal, QRect
 from PySide6.QtGui import (
+    QColor,
     QFont,
+    QPalette,
     QResizeEvent,
     QKeyEvent,
     QTextCursor,
@@ -11,11 +13,11 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import QPlainTextEdit, QWidget
 
+from writing_english.editor.editor_theme import EditorColors
 from writing_english.editor.line_number_area import LineNumberArea
 
 
-TARGET_LINE_CHARS = 72
-MIN_SIDE_PADDING = 32
+EDITOR_SIDE_PADDING = 28
 LINE_HEIGHT_PERCENT = 160
 
 
@@ -53,6 +55,46 @@ class EditorWidget(QPlainTextEdit):
     def _connect_signals(self) -> None:
         self.cursorPositionChanged.connect(self._emit_cursor_position)
         self.textChanged.connect(self._emit_stats)
+        self.blockCountChanged.connect(self._on_block_count_changed)
+        self.updateRequest.connect(self._on_update_request)
+
+    def _on_block_count_changed(self, _new_count: int) -> None:
+        self._update_text_margins()
+        self._reposition_line_number_area()
+
+    def _on_update_request(self, rect: QRect, dy: int) -> None:
+        if dy != 0:
+            self._line_number_area.scroll(0, dy)
+        else:
+            self._line_number_area.update(
+                0, rect.y(), self._line_number_area.width(), rect.height()
+            )
+        if rect.contains(self.viewport().rect()):
+            self._update_text_margins()
+            self._reposition_line_number_area()
+
+    def apply_theme(self, colors: EditorColors) -> None:
+        self.setStyleSheet(
+            f"""
+            QPlainTextEdit {{
+                background-color: {colors.background};
+                color: {colors.text};
+                selection-background-color: {colors.accent};
+                border: none;
+                margin: 0px;
+                padding: 0px;
+            }}
+            """
+        )
+        pal = self.palette()
+        pal.setColor(QPalette.ColorRole.Base, QColor(colors.background))
+        pal.setColor(QPalette.ColorRole.Text, QColor(colors.text))
+        pal.setColor(QPalette.ColorRole.AlternateBase, QColor(colors.background))
+        pal.setColor(QPalette.ColorRole.Mid, QColor(colors.line_number))
+        pal.setColor(QPalette.ColorRole.Highlight, QColor(colors.accent))
+        pal.setColor(QPalette.ColorRole.HighlightedText, QColor(colors.text))
+        self.setPalette(pal)
+        self._line_number_area.update()
 
     def set_overwrite_mode(self, enabled: bool) -> None:
         self._overwrite_mode = enabled
@@ -79,11 +121,8 @@ class EditorWidget(QPlainTextEdit):
         return 10 + self.fontMetrics().horizontalAdvance("9") * digits
 
     def _update_text_margins(self) -> None:
-        char_w = self.fontMetrics().horizontalAdvance("0") or 8
-        target_text_w = char_w * TARGET_LINE_CHARS
         gutter = self.line_number_area_width()
-        available = max(0, self.width() - gutter)
-        side_pad = max(MIN_SIDE_PADDING, (available - target_text_w) // 2)
+        side_pad = EDITOR_SIDE_PADDING
         self.setViewportMargins(gutter + side_pad, 0, side_pad, 0)
 
     def _reposition_line_number_area(self) -> None:

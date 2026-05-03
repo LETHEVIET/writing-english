@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QGuiApplication
+
 
 def _parse_rgb(rgb_str: str) -> str | None:
     parts = rgb_str.split(",")
@@ -44,11 +47,22 @@ def _read_kde_wm_colors() -> tuple[str | None, str | None]:
     return (active_bg, active_fg)
 
 
-def get_chrome_colors(theme: str) -> tuple[str, str]:
-    """Return (background, foreground) colors for app chrome that match OS title bar.
+def get_system_theme() -> str:
+    app = QGuiApplication.instance()
+    if app is not None:
+        if app.styleHints().colorScheme() == Qt.ColorScheme.Dark:
+            return "dark"
+    return "light"
 
-    Falls back to palette() values if no OS info is available.
+
+def get_chrome_colors(theme: str) -> tuple[str, str]:
+    """Return (background, foreground) colors for app chrome.
+
+    Dark theme always uses its own dark chrome. Light theme tries to match
+    the OS title bar, falling back to palette() values.
     """
+    if theme == "dark":
+        return ("#252526", "#D4D4D4")
     bg, fg = _read_kde_wm_colors()
     if bg and fg:
         return (bg, fg)

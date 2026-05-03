@@ -12,10 +12,8 @@ QMainWindow::separator {
     border: none;
 }
 
-/* === UNIFIED HEADER (Menu + Toolbar + Prompt) === */
-/* Use system palette so chrome matches the OS title bar color */
+/* === UNIFIED HEADER (Menu + Prompt) === */
 QMenuBar,
-QToolBar#mainToolbar,
 QWidget#promptBar {
     background-color: @chrome-bg@;
     border: none;
@@ -59,38 +57,6 @@ QMenu::separator {
     margin: 4px 8px;
 }
 
-/* === TOOLBAR === */
-QToolBar#mainToolbar {
-    border: none;
-    padding: 4px 12px;
-    spacing: 2px;
-    margin: 0px;
-}
-
-QToolBar#mainToolbar::separator {
-    background-color: #E4E4E4;
-    width: 1px;
-    margin: 6px 8px;
-}
-
-QToolBar#mainToolbar QPushButton[toolbarButton="true"] {
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    padding: 4px 12px;
-    font-size: 12px;
-    color: #555555;
-}
-
-QToolBar#mainToolbar QPushButton[toolbarButton="true"]:hover {
-    background-color: #EFEFEF;
-    color: #1A1A1A;
-}
-
-QToolBar#mainToolbar QPushButton[toolbarButton="true"]:pressed {
-    background-color: #E4E4E4;
-}
-
 /* === PROMPT BAR === */
 QWidget#promptBar {
     background-color: @chrome-bg@;
@@ -105,7 +71,7 @@ QLabel#promptBarLabel {
 }
 
 QPlainTextEdit#promptBarInput {
-    background: transparent;
+    background-color: @chrome-bg@;
     border: none;
     color: #2A2A2A;
     selection-background-color: #B4D7FF;

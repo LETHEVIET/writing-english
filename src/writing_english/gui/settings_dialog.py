@@ -69,7 +69,7 @@ class SettingsDialog(QDialog):
         appearance_layout = QFormLayout(appearance_group)
 
         self._theme = QComboBox()
-        self._theme.addItems(["light", "dark"])
+        self._theme.addItems(["system", "light", "dark"])
         appearance_layout.addRow("Theme:", self._theme)
 
         layout.addWidget(appearance_group)
