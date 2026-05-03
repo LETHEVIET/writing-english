@@ -1,0 +1,200 @@
+/* Light Theme - iA Writer Inspired with Unified Header */
+
+/* === MAIN WINDOW === */
+QMainWindow {
+    background-color: @chrome-bg@;
+}
+
+QMainWindow::separator {
+    width: 0px;
+    height: 0px;
+    background-color: none;
+    border: none;
+}
+
+/* === UNIFIED HEADER (Menu + Toolbar + Prompt) === */
+/* Use system palette so chrome matches the OS title bar color */
+QMenuBar,
+QToolBar#mainToolbar,
+QWidget#promptBar {
+    background-color: @chrome-bg@;
+    border: none;
+    margin: 0px;
+    padding: 0px;
+}
+
+QMenuBar {
+    border: none;
+    padding: 3px 6px;
+}
+
+QMenuBar::item {
+    padding: 4px 10px;
+    background: transparent;
+    border-radius: 3px;
+}
+
+QMenuBar::item:selected {
+    background-color: #ECECEC;
+}
+
+QMenu {
+    background-color: #FFFFFF;
+    border: 1px solid #DDDDDD;
+    padding: 4px;
+}
+
+QMenu::item {
+    padding: 6px 24px;
+    border-radius: 3px;
+}
+
+QMenu::item:selected {
+    background-color: #EFEFEF;
+}
+
+QMenu::separator {
+    height: 1px;
+    background-color: #ECECEC;
+    margin: 4px 8px;
+}
+
+/* === TOOLBAR === */
+QToolBar#mainToolbar {
+    border: none;
+    padding: 4px 12px;
+    spacing: 2px;
+    margin: 0px;
+}
+
+QToolBar#mainToolbar::separator {
+    background-color: #E4E4E4;
+    width: 1px;
+    margin: 6px 8px;
+}
+
+QToolBar#mainToolbar QPushButton[toolbarButton="true"] {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 4px 12px;
+    font-size: 12px;
+    color: #555555;
+}
+
+QToolBar#mainToolbar QPushButton[toolbarButton="true"]:hover {
+    background-color: #EFEFEF;
+    color: #1A1A1A;
+}
+
+QToolBar#mainToolbar QPushButton[toolbarButton="true"]:pressed {
+    background-color: #E4E4E4;
+}
+
+/* === PROMPT BAR === */
+QWidget#promptBar {
+    background-color: @chrome-bg@;
+    border-bottom: 1px solid palette(mid);
+    margin: 0px;
+    padding: 0px;
+}
+
+QLabel#promptBarLabel {
+    color: #B5B5B5;
+    margin-right: 2px;
+}
+
+QPlainTextEdit#promptBarInput {
+    background: transparent;
+    border: none;
+    color: #2A2A2A;
+    selection-background-color: #B4D7FF;
+    padding: 4px 0;
+    margin: 0;
+}
+
+QPlainTextEdit#promptBarInput::placeholder {
+    color: #AAAAAA;
+}
+
+QPlainTextEdit#promptBarInput:focus {
+    color: #1A1A1A;
+}
+
+/* === STATUS BAR === */
+QStatusBar {
+    background-color: @chrome-bg@;
+    border-top: 1px solid palette(mid);
+    color: palette(mid);
+    font-size: 11px;
+    margin: 0px;
+    padding: 0px;
+}
+
+QStatusBar::item {
+    border: none;
+}
+
+QStatusBar QLabel {
+    color: #888888;
+    padding: 0 10px;
+    font-size: 11px;
+}
+
+/* === TOOLTIPS === */
+QToolTip {
+    background-color: #2A2A2A;
+    color: #FAFAFA;
+    border: none;
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+/* === SCROLLBARS === */
+QScrollBar:vertical {
+    background-color: #FAFAFA;
+    width: 10px;
+    border: none;
+    margin: 0;
+}
+
+QScrollBar::handle:vertical {
+    background-color: #D6D6D6;
+    min-height: 30px;
+    border-radius: 5px;
+    margin: 2px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background-color: #B0B0B0;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: transparent;
+}
+
+QScrollBar:horizontal {
+    background-color: #FAFAFA;
+    height: 10px;
+    border: none;
+    margin: 0;
+}
+
+QScrollBar::handle:horizontal {
+    background-color: #D6D6D6;
+    min-width: 30px;
+    border-radius: 5px;
+    margin: 2px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background-color: #B0B0B0;
+}
+
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    width: 0;
+}

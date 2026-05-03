@@ -1,0 +1,29 @@
+[project]
+name = "writing-english"
+version = "0.1.0"
+description = "A focused English writing practice desktop app"
+requires-python = ">=3.14"
+dependencies = [
+    "pyside6>=6.8.0",
+    "pyyaml>=6.0.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-qt>=4.0",
+    "ruff>=0.9.0",
+    "mypy>=1.14.0",
+    "nuitka>=2.6",
+]
+
+[project.scripts]
+writing-english = "writing_english.main:main"
+
+[tool.ruff]
+line-length = 88
+target-version = "py314"
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
