@@ -24,6 +24,8 @@ from PySide6.QtWidgets import (
 from writing_english.app.constants import SETTINGS_PATH
 from writing_english.config.settings import Settings
 
+_SOUNDS_DIR = Path(__file__).resolve().parent.parent / "resources" / "sounds"
+
 
 class SettingsDialog(QDialog):
     def __init__(self, settings: Settings, parent: QWidget | None = None) -> None:
@@ -73,6 +75,20 @@ class SettingsDialog(QDialog):
 
         self._spell_check = QCheckBox("Enable spell check")
         editor_layout.addRow(self._spell_check)
+
+        self._typing_sounds = QCheckBox("Typing sounds")
+        editor_layout.addRow(self._typing_sounds)
+
+        self._typing_sound_pack = QComboBox()
+        if _SOUNDS_DIR.exists():
+            packs = sorted([d.name for d in _SOUNDS_DIR.iterdir() if d.is_dir()])
+            self._typing_sound_pack.addItems(packs)
+        editor_layout.addRow("Sound Pack:", self._typing_sound_pack)
+
+        self._sounds_citation = QLabel("<a href='https://github.com/tplai/kbsim/tree/master'>Sounds from kbsim</a>")
+        self._sounds_citation.setOpenExternalLinks(True)
+        self._sounds_citation.setStyleSheet("font-size: 11px; color: #888;")
+        editor_layout.addRow("", self._sounds_citation)
 
         layout.addWidget(editor_group)
 
@@ -143,6 +159,8 @@ class SettingsDialog(QDialog):
         self._word_wrap.setChecked(self._settings.word_wrap)
         self._show_line_numbers.setChecked(self._settings.show_line_numbers)
         self._spell_check.setChecked(self._settings.spell_check)
+        self._typing_sounds.setChecked(self._settings.typing_sounds)
+        self._typing_sound_pack.setCurrentText(self._settings.typing_sound_pack)
         self._theme.setCurrentText(self._settings.theme)
         self._autosave_interval.setValue(self._settings.autosave_interval_ms // 1000)
         self._app_data_dir.setText(self._settings.app_data_dir)
@@ -155,7 +173,8 @@ class SettingsDialog(QDialog):
         self._settings.word_wrap = self._word_wrap.isChecked()
         self._settings.show_line_numbers = self._show_line_numbers.isChecked()
         self._settings.spell_check = self._spell_check.isChecked()
-        self._settings.theme = self._theme.currentText()
+        self._settings.typing_sounds = self._typing_sounds.isChecked()
+        self._settings.typing_sound_pack = self._typing_sound_pack.currentText()
         self._settings.theme = self._theme.currentText()
         self._settings.autosave_interval_ms = self._autosave_interval.value() * 1000
 

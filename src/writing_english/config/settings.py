@@ -15,6 +15,8 @@ from writing_english.config.defaults import (
     DEFAULT_SPELL_CHECK,
     DEFAULT_GECTOR_MODEL,
     DEFAULT_GECTOR_MODEL_DIR,
+    DEFAULT_TYPING_SOUNDS,
+    DEFAULT_TYPING_SOUND_PACK,
     DEFAULT_THEME,
     DEFAULT_AUTOSAVE_INTERVAL_MS,
 )
@@ -101,6 +103,23 @@ class Settings:
     @spell_check.setter
     def spell_check(self, value: bool) -> None:
         self._set("editor/spell_check", value)
+
+    @property
+    def typing_sounds(self) -> bool:
+        val = self._get("editor/typing_sounds", DEFAULT_TYPING_SOUNDS)
+        return str(val).lower() in ("true", "1")
+
+    @typing_sounds.setter
+    def typing_sounds(self, value: bool) -> None:
+        self._set("editor/typing_sounds", value)
+
+    @property
+    def typing_sound_pack(self) -> str:
+        return str(self._get("editor/typing_sound_pack", DEFAULT_TYPING_SOUND_PACK))
+
+    @typing_sound_pack.setter
+    def typing_sound_pack(self, value: str) -> None:
+        self._set("editor/typing_sound_pack", value)
 
     @property
     def gector_model(self) -> str:

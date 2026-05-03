@@ -7,4 +7,6 @@ DEFAULT_SPELL_CHECK = True
 DEFAULT_GECTOR_MODEL = "letheviet/gector-roberta-base-5k-onnx"
 DEFAULT_GECTOR_MODEL_DIR = ""  # empty = not configured
 DEFAULT_THEME = "system"
+DEFAULT_TYPING_SOUNDS = True
+DEFAULT_TYPING_SOUND_PACK = "alpaca"
 DEFAULT_AUTOSAVE_INTERVAL_MS = 30_000

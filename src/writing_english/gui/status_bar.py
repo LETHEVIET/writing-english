@@ -34,6 +34,7 @@ class StatusBarButton(QToolButton):
 class StatusBar(QStatusBar):
     spell_check_toggled = Signal(bool)
     grammar_check_triggered = Signal()
+    typing_sounds_toggled = Signal(bool)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -72,6 +73,11 @@ class StatusBar(QStatusBar):
         )
         grammar_btn.clicked.connect(self.grammar_check_triggered)
 
+        typing_sounds_btn = self._add_button(
+            "typing_sounds", "volume-2", "Typing sounds", checkable=True
+        )
+        typing_sounds_btn.toggled.connect(self.typing_sounds_toggled)
+
         # --- stats / mode labels ---
         self.addPermanentWidget(self._words_label)
         self.addPermanentWidget(self._chars_label)
@@ -106,6 +112,14 @@ class StatusBar(QStatusBar):
 
     def set_spell_check(self, enabled: bool) -> None:
         btn = self._buttons.get("spell_check")
+        if btn is None:
+            return
+        btn.blockSignals(True)
+        btn.setChecked(enabled)
+        btn.blockSignals(False)
+
+    def set_typing_sounds(self, enabled: bool) -> None:
+        btn = self._buttons.get("typing_sounds")
         if btn is None:
             return
         btn.blockSignals(True)

@@ -30,6 +30,7 @@ class EditorWidget(QPlainTextEdit):
     cursor_position = Signal(int, int)
     stats_changed = Signal(int, int, int)
     gec_error_clicked = Signal(int)
+    typing_sound = Signal(str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -223,6 +224,24 @@ class EditorWidget(QPlainTextEdit):
         if self._overwrite_mode and not event.text():
             super().keyPressEvent(event)
             return
+        is_sound_key = event.text() or event.key() in (
+            Qt.Key.Key_Backspace,
+            Qt.Key.Key_Return,
+            Qt.Key.Key_Space,
+        )
+        if is_sound_key and not event.modifiers() & (
+            Qt.KeyboardModifier.ControlModifier
+            | Qt.KeyboardModifier.AltModifier
+            | Qt.KeyboardModifier.MetaModifier
+        ):
+            if event.key() == Qt.Key.Key_Return:
+                self.typing_sound.emit("enter")
+            elif event.key() == Qt.Key.Key_Space:
+                self.typing_sound.emit("space")
+            elif event.key() == Qt.Key.Key_Backspace:
+                self.typing_sound.emit("backspace")
+            else:
+                self.typing_sound.emit("key")
         if self._overwrite_mode and event.text():
             cursor = self.textCursor()
             if (

@@ -29,6 +29,7 @@ from writing_english.gui.settings_dialog import SettingsDialog
 from writing_english.gui.analysis_widget import AnalysisWidget
 from writing_english.adapters.gec.gector_adapter import GectorAdapter
 from writing_english.editor.grammar_controller import GrammarCheckController
+from writing_english.editor.typing_sounds import TypingSoundManager
 from writing_english.infrastructure.autosave import AutosaveManager
 
 
@@ -100,6 +101,9 @@ class MainWindow(QMainWindow):
         self._autosave = AutosaveManager(self)
         self._autosave.set_document(self._document)
 
+        self._typing_sounds = TypingSoundManager()
+        self._typing_sounds.initialize(self._ctx.settings.typing_sound_pack)
+
         self._restore_layout()
 
     def _connect_signals(self) -> None:
@@ -119,6 +123,8 @@ class MainWindow(QMainWindow):
         self._analysis.close_requested.connect(self._hide_analysis)
         self._editor.gec_error_clicked.connect(self._highlight_analysis_error)
         self._prompt_bar.prompt_changed.connect(self._on_prompt_edited)
+        self._editor.typing_sound.connect(self._on_typing_sound)
+        self._status_bar.typing_sounds_toggled.connect(self._on_typing_sounds_toggled)
         self._focus_overlay.exit_focus.connect(self.toggle_focus_mode)
         self._app().styleHints().colorSchemeChanged.connect(
             self._on_system_theme_changed
@@ -318,10 +324,27 @@ class MainWindow(QMainWindow):
             self._document.is_modified = True
             self._update_title()
 
+    @Slot(str)
+    def _on_typing_sound(self, sound_type: str) -> None:
+        if sound_type == "enter":
+            self._typing_sounds.play_enter()
+        elif sound_type == "space":
+            self._typing_sounds.play_space()
+        elif sound_type == "backspace":
+            self._typing_sounds.play_backspace()
+        else:
+            self._typing_sounds.play_key()
+
     @Slot(bool)
     def _on_spell_check_toggled(self, enabled: bool) -> None:
         self._editor.set_spell_check(enabled)
         self._ctx.settings.spell_check = enabled
+        self._ctx.settings.sync()
+
+    @Slot(bool)
+    def _on_typing_sounds_toggled(self, enabled: bool) -> None:
+        self._typing_sounds.enabled = enabled
+        self._ctx.settings.typing_sounds = enabled
         self._ctx.settings.sync()
 
     @Slot()
@@ -439,6 +462,9 @@ class MainWindow(QMainWindow):
         self._editor.set_show_line_numbers(settings.show_line_numbers)
         self._editor.set_spell_check(settings.spell_check)
         self._status_bar.set_spell_check(settings.spell_check)
+        self._typing_sounds.enabled = settings.typing_sounds
+        self._status_bar.set_typing_sounds(settings.typing_sounds)
+        self._typing_sounds.change_pack(settings.typing_sound_pack)
         if settings.word_wrap:
             self._editor.setLineWrapMode(self._editor.LineWrapMode.WidgetWidth)
         else:
