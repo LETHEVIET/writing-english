@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import re
-from typing import Any
-
 from PySide6.QtCore import QRegularExpression
 from PySide6.QtGui import QSyntaxHighlighter, QTextCharFormat, QColor, QTextDocument
 
@@ -15,31 +13,11 @@ class EditorHighlighter(QSyntaxHighlighter):
     def __init__(self, parent: QTextDocument) -> None:
         super().__init__(parent)
         self._highlighting_rules: list[tuple[QRegularExpression, QTextCharFormat]] = []
-        self._spell_check_enabled = False
-        self._spell_checker: Any | None = None
-        self._spell_fmt = QTextCharFormat()
-        self._spell_fmt.setUnderlineStyle(
-            QTextCharFormat.UnderlineStyle.SpellCheckUnderline
-        )
-        self._spell_fmt.setUnderlineColor(QColor("#DA4453"))
-
         self._gec_enabled = False
         self._gec_errors: list[GECError] = []
         self._gec_fmt = QTextCharFormat()
         self._gec_fmt.setUnderlineStyle(QTextCharFormat.UnderlineStyle.SingleUnderline)
         self._gec_fmt.setUnderlineColor(QColor("#F67400"))
-
-    def set_spell_check(self, enabled: bool) -> None:
-        if enabled and self._spell_checker is None:
-            from spellchecker import SpellChecker
-
-            self._spell_checker = SpellChecker()
-        self._spell_check_enabled = enabled
-        self.rehighlight()
-
-    def set_spell_enabled_color(self, color: str) -> None:
-        self._spell_fmt.setUnderlineColor(QColor(color))
-        self.rehighlight()
 
     def set_gec_enabled(self, enabled: bool) -> None:
         self._gec_enabled = enabled
@@ -64,13 +42,6 @@ class EditorHighlighter(QSyntaxHighlighter):
         return self._gec_errors
 
     def highlightBlock(self, text: str) -> None:
-        if self._spell_check_enabled and self._spell_checker is not None:
-            checker = self._spell_checker
-            for m in _WORD_RE.finditer(text):
-                word = m.group()
-                if word in checker.unknown([word]):
-                    self.setFormat(m.start(), len(word), self._spell_fmt)
-
         if self._gec_enabled:
             block_pos = self.currentBlock().position()
             block_end = block_pos + len(text)

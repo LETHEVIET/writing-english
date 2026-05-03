@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QSettings, Slot
+from PySide6.QtCore import Qt, QSettings, Slot, QTimer
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QMainWindow,
@@ -27,6 +27,7 @@ from writing_english.gui.system_colors import get_chrome_colors, get_system_them
 from writing_english.gui.focus_mode import FocusModeOverlay
 from writing_english.gui.settings_dialog import SettingsDialog
 from writing_english.gui.analysis_widget import AnalysisWidget
+from writing_english.gui.sticker_reward import StickerRewardController
 from writing_english.adapters.gec.gector_adapter import GectorAdapter
 from writing_english.editor.grammar_controller import GrammarCheckController
 from writing_english.editor.typing_sounds import TypingSoundManager
@@ -104,14 +105,22 @@ class MainWindow(QMainWindow):
         self._typing_sounds = TypingSoundManager()
         self._typing_sounds.initialize(self._ctx.settings.typing_sound_pack)
 
+        self._session_timer = QTimer(self)
+        self._session_timer.setInterval(1000)
+        self._session_timer.timeout.connect(self._on_timer_tick)
+        self._is_timer_running = False
+
+        self._sticker_rewards = StickerRewardController(self._editor)
+
         self._restore_layout()
+        self._update_timer_display()
 
     def _connect_signals(self) -> None:
         self._editor.cursor_position.connect(self._status_bar.update_cursor)
         self._editor.stats_changed.connect(self._on_stats_changed)
         self._editor.overwrite_mode_changed.connect(self._status_bar.set_overwrite_mode)
         self._editor.textChanged.connect(self._on_text_changed)
-        self._status_bar.spell_check_toggled.connect(self._on_spell_check_toggled)
+        self._status_bar.timer_toggled.connect(self._on_timer_toggled)
         self._status_bar.grammar_check_triggered.connect(
             self._on_grammar_check_triggered
         )
@@ -125,6 +134,10 @@ class MainWindow(QMainWindow):
         self._prompt_bar.prompt_changed.connect(self._on_prompt_edited)
         self._editor.typing_sound.connect(self._on_typing_sound)
         self._status_bar.typing_sounds_toggled.connect(self._on_typing_sounds_toggled)
+        self._status_bar.sticker_rewards_toggled.connect(
+            self._on_sticker_rewards_toggled
+        )
+        self._editor.sentence_completed.connect(self._sticker_rewards.show_random_sticker)
         self._focus_overlay.exit_focus.connect(self.toggle_focus_mode)
         self._app().styleHints().colorSchemeChanged.connect(
             self._on_system_theme_changed
@@ -195,6 +208,7 @@ class MainWindow(QMainWindow):
         self._autosave.set_document(self._document)
         self._ctx.recent_files.add(path)
         self._update_title()
+        self._update_timer_display()
 
     def save_document(self) -> None:
         self._sync_content_to_document()
@@ -323,6 +337,10 @@ class MainWindow(QMainWindow):
         if not self._document.is_modified:
             self._document.is_modified = True
             self._update_title()
+        if not self._is_timer_running:
+            self._is_timer_running = True
+            self._session_timer.start()
+            self._status_bar.set_timer_state(True)
 
     @Slot(str)
     def _on_typing_sound(self, sound_type: str) -> None:
@@ -336,15 +354,36 @@ class MainWindow(QMainWindow):
             self._typing_sounds.play_key()
 
     @Slot(bool)
-    def _on_spell_check_toggled(self, enabled: bool) -> None:
-        self._editor.set_spell_check(enabled)
-        self._ctx.settings.spell_check = enabled
-        self._ctx.settings.sync()
+    def _on_timer_toggled(self, checked: bool) -> None:
+        self._is_timer_running = checked
+        if checked:
+            self._session_timer.start()
+        else:
+            self._session_timer.stop()
+        self._status_bar.set_timer_state(checked)
+
+    @Slot()
+    def _on_timer_tick(self) -> None:
+        self._document.session_duration += 1
+        self._update_timer_display()
+
+    def _update_timer_display(self) -> None:
+        duration = self._document.session_duration
+        h = duration // 3600
+        m = (duration % 3600) // 60
+        s = duration % 60
+        self._status_bar.set_timer_display(f"{h:02d}:{m:02d}:{s:02d}")
 
     @Slot(bool)
     def _on_typing_sounds_toggled(self, enabled: bool) -> None:
         self._typing_sounds.enabled = enabled
         self._ctx.settings.typing_sounds = enabled
+        self._ctx.settings.sync()
+
+    @Slot(bool)
+    def _on_sticker_rewards_toggled(self, enabled: bool) -> None:
+        self._sticker_rewards.set_enabled(enabled)
+        self._ctx.settings.sticker_rewards = enabled
         self._ctx.settings.sync()
 
     @Slot()
@@ -448,7 +487,6 @@ class MainWindow(QMainWindow):
             self._app().setStyleSheet(qss_text)
 
         self._editor.apply_theme(colors)
-        self._editor._highlighter.set_spell_enabled_color(colors.spell_underline)
         self._editor._highlighter.set_gec_underline_color(colors.gec_underline)
 
     def _apply_editor_settings(self) -> None:
@@ -460,11 +498,12 @@ class MainWindow(QMainWindow):
             font.setPointSize(settings.font_size)
         self._editor.setFont(font)
         self._editor.set_show_line_numbers(settings.show_line_numbers)
-        self._editor.set_spell_check(settings.spell_check)
-        self._status_bar.set_spell_check(settings.spell_check)
         self._typing_sounds.enabled = settings.typing_sounds
         self._status_bar.set_typing_sounds(settings.typing_sounds)
         self._typing_sounds.change_pack(settings.typing_sound_pack)
+        self._sticker_rewards.set_enabled(settings.sticker_rewards)
+        self._sticker_rewards.set_folder(settings.sticker_folder)
+        self._status_bar.set_sticker_rewards(settings.sticker_rewards)
         if settings.word_wrap:
             self._editor.setLineWrapMode(self._editor.LineWrapMode.WidgetWidth)
         else:

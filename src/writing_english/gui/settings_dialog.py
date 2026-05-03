@@ -73,9 +73,6 @@ class SettingsDialog(QDialog):
         self._show_line_numbers = QCheckBox("Show line numbers")
         editor_layout.addRow(self._show_line_numbers)
 
-        self._spell_check = QCheckBox("Enable spell check")
-        editor_layout.addRow(self._spell_check)
-
         self._typing_sounds = QCheckBox("Typing sounds")
         editor_layout.addRow(self._typing_sounds)
 
@@ -85,7 +82,9 @@ class SettingsDialog(QDialog):
             self._typing_sound_pack.addItems(packs)
         editor_layout.addRow("Sound Pack:", self._typing_sound_pack)
 
-        self._sounds_citation = QLabel("<a href='https://github.com/tplai/kbsim/tree/master'>Sounds from kbsim</a>")
+        self._sounds_citation = QLabel(
+            "<a href='https://github.com/tplai/kbsim/tree/master'>Sounds from kbsim</a>"
+        )
         self._sounds_citation.setOpenExternalLinks(True)
         self._sounds_citation.setStyleSheet("font-size: 11px; color: #888;")
         editor_layout.addRow("", self._sounds_citation)
@@ -111,6 +110,25 @@ class SettingsDialog(QDialog):
         general_layout.addRow("Auto-save Interval:", self._autosave_interval)
 
         layout.addWidget(general_group)
+
+        rewards_group = QGroupBox("Rewards")
+        rewards_layout = QFormLayout(rewards_group)
+
+        self._sticker_rewards = QCheckBox("Enable sticker rewards")
+        rewards_layout.addRow(self._sticker_rewards)
+
+        sticker_folder_row = QWidget()
+        sticker_folder_layout = QVBoxLayout(sticker_folder_row)
+        sticker_folder_layout.setContentsMargins(0, 0, 0, 0)
+        self._sticker_folder = QLineEdit()
+        self._sticker_folder.setReadOnly(True)
+        sticker_folder_layout.addWidget(self._sticker_folder)
+        sticker_browse_btn = QPushButton("Browse...")
+        sticker_browse_btn.clicked.connect(self._on_browse_sticker_folder)
+        sticker_folder_layout.addWidget(sticker_browse_btn)
+        rewards_layout.addRow("Sticker Folder:", sticker_folder_row)
+
+        layout.addWidget(rewards_group)
 
         storage_group = QGroupBox("Storage")
         storage_layout = QFormLayout(storage_group)
@@ -152,17 +170,27 @@ class SettingsDialog(QDialog):
             self._app_data_dir.setText(path)
             self._settings_path_label.setText(str(Path(path) / "settings.ini"))
 
+    def _on_browse_sticker_folder(self) -> None:
+        path = QFileDialog.getExistingDirectory(
+            self,
+            "Select Sticker Images Folder",
+            self._sticker_folder.text() or str(Path.home()),
+        )
+        if path:
+            self._sticker_folder.setText(path)
+
     def _load_values(self) -> None:
         self._font_family.setCurrentText(self._settings.font_family)
         self._font_size.setValue(self._settings.font_size)
         self._line_height.setValue(self._settings.line_height)
         self._word_wrap.setChecked(self._settings.word_wrap)
         self._show_line_numbers.setChecked(self._settings.show_line_numbers)
-        self._spell_check.setChecked(self._settings.spell_check)
         self._typing_sounds.setChecked(self._settings.typing_sounds)
         self._typing_sound_pack.setCurrentText(self._settings.typing_sound_pack)
         self._theme.setCurrentText(self._settings.theme)
         self._autosave_interval.setValue(self._settings.autosave_interval_ms // 1000)
+        self._sticker_rewards.setChecked(self._settings.sticker_rewards)
+        self._sticker_folder.setText(self._settings.sticker_folder)
         self._app_data_dir.setText(self._settings.app_data_dir)
         self._settings_path_label.setText(str(SETTINGS_PATH))
 
@@ -172,11 +200,12 @@ class SettingsDialog(QDialog):
         self._settings.line_height = self._line_height.value()
         self._settings.word_wrap = self._word_wrap.isChecked()
         self._settings.show_line_numbers = self._show_line_numbers.isChecked()
-        self._settings.spell_check = self._spell_check.isChecked()
         self._settings.typing_sounds = self._typing_sounds.isChecked()
         self._settings.typing_sound_pack = self._typing_sound_pack.currentText()
         self._settings.theme = self._theme.currentText()
         self._settings.autosave_interval_ms = self._autosave_interval.value() * 1000
+        self._settings.sticker_rewards = self._sticker_rewards.isChecked()
+        self._settings.sticker_folder = self._sticker_folder.text()
 
         new_app_data_dir = self._app_data_dir.text()
         if new_app_data_dir != self._settings.app_data_dir:

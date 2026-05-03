@@ -128,7 +128,9 @@ class GrammarSection(QWidget):
         self._empty_label.setText("Click the grammar check button to start.")
         self._empty_label.setVisible(True)
 
-    def highlight_error(self, index: int, scroll_area: QScrollArea | None = None) -> None:
+    def highlight_error(
+        self, index: int, scroll_area: QScrollArea | None = None
+    ) -> None:
         self._clear_error_highlight()
         if 0 <= index < len(self._error_rows):
             row = self._error_rows[index]

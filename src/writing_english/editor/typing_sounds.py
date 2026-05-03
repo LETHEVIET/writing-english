@@ -22,7 +22,7 @@ class TypingSoundManager:
     def initialize(self, pack_name: str | None = None) -> None:
         if self._initialized:
             return
-        
+
         if pack_name:
             self.change_pack(pack_name)
         self._initialized = True
@@ -30,7 +30,7 @@ class TypingSoundManager:
     def change_pack(self, pack_name: str) -> None:
         if pack_name == self._current_pack:
             return
-            
+
         self._key_sounds.clear()
         self._space_sound = None
         self._enter_sound = None
@@ -40,7 +40,7 @@ class TypingSoundManager:
         pack_dir = _SOUNDS_DIR / pack_name
         if not pack_dir.exists() or not pack_dir.is_dir():
             return
-            
+
         self._current_pack = pack_name
 
         for i in range(5):

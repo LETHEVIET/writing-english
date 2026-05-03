@@ -32,19 +32,10 @@ class LLMAdapter(ABC):
     def is_available(self) -> bool: ...
 
 
-class SpellCheckAdapter(ABC):
-    @abstractmethod
-    def check(self, text: str) -> list[dict[str, object]]: ...
-
-    @abstractmethod
-    def is_available(self) -> bool: ...
-
-
 class AdapterRegistry:
     def __init__(self) -> None:
         self._gec: GECAdapter | None = None
         self._llm: LLMAdapter | None = None
-        self._spellcheck: SpellCheckAdapter | None = None
 
     def register_gec(self, adapter: GECAdapter) -> None:
         self._gec = adapter
@@ -57,9 +48,3 @@ class AdapterRegistry:
 
     def get_llm(self) -> LLMAdapter | None:
         return self._llm
-
-    def register_spellcheck(self, adapter: SpellCheckAdapter) -> None:
-        self._spellcheck = adapter
-
-    def get_spellcheck(self) -> SpellCheckAdapter | None:
-        return self._spellcheck

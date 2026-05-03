@@ -31,6 +31,7 @@ class EditorWidget(QPlainTextEdit):
     stats_changed = Signal(int, int, int)
     gec_error_clicked = Signal(int)
     typing_sound = Signal(str)
+    sentence_completed = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -113,9 +114,6 @@ class EditorWidget(QPlainTextEdit):
     @property
     def is_overwrite(self) -> bool:
         return self._overwrite_mode
-
-    def set_spell_check(self, enabled: bool) -> None:
-        self._highlighter.set_spell_check(enabled)
 
     def set_grammar_check(self, enabled: bool) -> None:
         self._highlighter.set_gec_enabled(enabled)
@@ -251,9 +249,22 @@ class EditorWidget(QPlainTextEdit):
                 cursor.movePosition(
                     QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor
                 )
-            super().keyPressEvent(event)
-            return
         super().keyPressEvent(event)
+
+        # Sentence completion detection
+        if event.key() in (Qt.Key.Key_Space, Qt.Key.Key_Return):
+            cursor = self.textCursor()
+            pos = cursor.position()
+            if pos >= 2:
+                # Check character before the space/enter
+                doc_text = self.toPlainText()
+                prev_char = doc_text[pos - 2] if pos > 1 else ""
+                if prev_char in (".", "!", "?"):
+                    # Check if there is actual content before the punctuation
+                    # We look back for non-whitespace
+                    lookback = doc_text[: pos - 2].strip()
+                    if lookback:
+                        self.sentence_completed.emit()
 
     def _emit_cursor_position(self) -> None:
         cursor = self.textCursor()

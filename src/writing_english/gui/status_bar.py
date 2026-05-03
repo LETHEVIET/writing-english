@@ -21,7 +21,8 @@ class StatusBarButton(QToolButton):
     ) -> None:
         super().__init__(parent)
         self.setObjectName("statusBarButton")
-        self.setFixedSize(_BTN_SIZE, _BTN_SIZE)
+        self.setFixedHeight(_BTN_SIZE)
+        self.setMinimumWidth(_BTN_SIZE)
         self.setIconSize(QSize(_ICON_SIZE, _ICON_SIZE))
         self.setCheckable(checkable)
         self.setToolTip(tooltip)
@@ -32,9 +33,10 @@ class StatusBarButton(QToolButton):
 
 
 class StatusBar(QStatusBar):
-    spell_check_toggled = Signal(bool)
+    timer_toggled = Signal(bool)
     grammar_check_triggered = Signal()
     typing_sounds_toggled = Signal(bool)
+    sticker_rewards_toggled = Signal(bool)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -62,11 +64,13 @@ class StatusBar(QStatusBar):
         ):
             lbl.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
-        # --- action buttons (add more here in the future) ---
-        spell_btn = self._add_button(
-            "spell_check", "spell-check", "Spell check", checkable=True
+        # --- action buttons ---
+        timer_btn = self._add_button(
+            "timer_toggle", "play", "Start/Pause Timer", checkable=True, permanent=False
         )
-        spell_btn.toggled.connect(self.spell_check_toggled)
+        timer_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        timer_btn.setText("00:00:00")
+        timer_btn.toggled.connect(self.timer_toggled)
 
         grammar_btn = self._add_button(
             "grammar_check", "grammar-check", "Grammar check", checkable=False
@@ -78,19 +82,32 @@ class StatusBar(QStatusBar):
         )
         typing_sounds_btn.toggled.connect(self.typing_sounds_toggled)
 
+        sticker_rewards_btn = self._add_button(
+            "sticker_rewards", "smile", "Sticker rewards", checkable=True
+        )
+        sticker_rewards_btn.toggled.connect(self.sticker_rewards_toggled)
+
         # --- stats / mode labels ---
         self.addPermanentWidget(self._words_label)
         self.addPermanentWidget(self._chars_label)
-        self.addPermanentWidget(self._mode_label)
+        # self.addPermanentWidget(self._mode_label)
 
-        self.addWidget(self._line_col_label)
+        self.addPermanentWidget(self._line_col_label)
 
     def _add_button(
-        self, name: str, icon_name: str, tooltip: str, checkable: bool = False
+        self,
+        name: str,
+        icon_name: str,
+        tooltip: str,
+        checkable: bool = False,
+        permanent: bool = True,
     ) -> StatusBarButton:
         btn = StatusBarButton(icon_name, tooltip, checkable, self)
         self._buttons[name] = btn
-        self.addPermanentWidget(btn)
+        if permanent:
+            self.addPermanentWidget(btn)
+        else:
+            self.addWidget(btn)
         return btn
 
     def button(self, name: str) -> StatusBarButton | None:
@@ -110,16 +127,30 @@ class StatusBar(QStatusBar):
     def set_overwrite_mode(self, enabled: bool) -> None:
         self._mode_label.setText("OVR" if enabled else "INSERT")
 
-    def set_spell_check(self, enabled: bool) -> None:
-        btn = self._buttons.get("spell_check")
+    def set_timer_display(self, formatted_time: str) -> None:
+        btn = self._buttons.get("timer_toggle")
+        if btn:
+            btn.setText(formatted_time)
+
+    def set_timer_state(self, running: bool) -> None:
+        btn = self._buttons.get("timer_toggle")
+        if btn is None:
+            return
+        btn.blockSignals(True)
+        btn.setChecked(running)
+        btn.setIcon(load_svg_icon("pause" if running else "play"))
+        btn.blockSignals(False)
+
+    def set_typing_sounds(self, enabled: bool) -> None:
+        btn = self._buttons.get("typing_sounds")
         if btn is None:
             return
         btn.blockSignals(True)
         btn.setChecked(enabled)
         btn.blockSignals(False)
 
-    def set_typing_sounds(self, enabled: bool) -> None:
-        btn = self._buttons.get("typing_sounds")
+    def set_sticker_rewards(self, enabled: bool) -> None:
+        btn = self._buttons.get("sticker_rewards")
         if btn is None:
             return
         btn.blockSignals(True)
@@ -137,3 +168,4 @@ class StatusBar(QStatusBar):
         else:
             btn.setIcon(load_svg_icon("grammar-check", color="#7A7C7F"))
             btn.setToolTip("Grammar check")
+

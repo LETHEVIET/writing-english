@@ -52,33 +52,44 @@ def _classify_error(original: str, suggestion: str) -> tuple[str, str]:
     if original in ("a", "an", "the") or suggestion in ("a", "an", "the"):
         return "article", _CATEGORIES["article"]
 
-    if not orig_is_punct and not sugg_is_punct:
-        if len(original) <= 2 and len(suggestion) <= 2:
-            return "grammar", _CATEGORIES["grammar"]
-
-        if original[0].lower() != suggestion[0].lower():
-            return "grammar", _CATEGORIES["grammar"]
-
-        if len(original) > 3 and len(suggestion) > 3:
-            prefix_len = 0
-            for a, b in zip(original, suggestion):
-                if a == b:
-                    prefix_len += 1
-                else:
-                    break
-            suffix_match = 0
-            for a, b in zip(reversed(original), reversed(suggestion)):
-                if a == b:
-                    suffix_match += 1
-                else:
-                    break
-            if prefix_len >= 2 or suffix_match >= 2:
-                return "spelling", _CATEGORIES["spelling"]
-
     if "-" in suggestion and "-" not in original:
         return "merge", _CATEGORIES["merge"]
     if "-" in original and "-" not in suggestion:
         return "split", _CATEGORIES["split"]
+
+    if not orig_is_punct and not sugg_is_punct:
+        # Check for simple pluralization/singularization
+        if (
+            orig_lower + "s" == sugg_lower
+            or orig_lower + "es" == sugg_lower
+            or sugg_lower + "s" == orig_lower
+            or sugg_lower + "es" == orig_lower
+        ):
+            return "grammar", _CATEGORIES["grammar"]  # Noun Number (maps to Grammar)
+
+        # Check for simple verb form changes (-ing, -ed, -s)
+        if (
+            (orig_lower.endswith("ing") and sugg_lower.startswith(orig_lower[:-3]))
+            or (sugg_lower.endswith("ing") and orig_lower.startswith(sugg_lower[:-3]))
+            or (orig_lower.endswith("ed") and sugg_lower.startswith(orig_lower[:-2]))
+            or (sugg_lower.endswith("ed") and orig_lower.startswith(sugg_lower[:-2]))
+        ):
+            return "verb_form", _CATEGORIES["verb_form"]
+
+        # Irregular verb forms or other verb mappings
+        verb_pairs = {("is", "are"), ("was", "were"), ("has", "have"), ("do", "does")}
+        for v1, v2 in verb_pairs:
+            if (orig_lower == v1 and sugg_lower == v2) or (
+                orig_lower == v2 and sugg_lower == v1
+            ):
+                return "verb_form", _CATEGORIES["verb_form"]
+
+        # Use SequenceMatcher to detect spelling mistakes (high similarity)
+        matcher = difflib.SequenceMatcher(None, orig_lower, sugg_lower)
+        ratio = matcher.ratio()
+
+        if len(orig_lower) > 3 and ratio >= 0.75:
+            return "spelling", _CATEGORIES["spelling"]
 
     return "grammar", _CATEGORIES["grammar"]
 

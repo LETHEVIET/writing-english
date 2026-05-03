@@ -1,16 +1,1 @@
-<svg
-  xmlns="http://www.w3.org/2000/svg"
-  width="24"
-  height="24"
-  viewBox="0 0 24 24"
-  fill="none"
-  stroke="currentColor"
-  stroke-width="2"
-  stroke-linecap="round"
-  stroke-linejoin="round"
->
-  <path d="M4 7V4h16v3" />
-  <path d="M9 20h6" />
-  <path d="M12 4v16" />
-  <path d="M8 12h8" />
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-spell-check-icon lucide-spell-check"><g id="svgGroup" stroke-linecap="round" fill-rule="evenodd" font-size="9pt" stroke="currentColor" stroke-width="0.25mm" style="stroke:currentColor;stroke-width:0.25mm;fill:currentColor"><path d="M 6.961 8.801 L 13.16 8.801 L 13.16 15.047 Q 12.844 15.516 12.152 16.096 Q 11.461 16.676 10.248 17.104 Q 9.035 17.531 7.125 17.531 Q 5.566 17.531 4.26 16.986 Q 2.953 16.442 1.998 15.393 Q 1.043 14.344 0.522 12.838 Q 0 11.332 0 9.422 L 0 8.098 Q 0 6.188 0.451 4.688 Q 0.902 3.188 1.781 2.139 Q 2.66 1.09 3.938 0.545 Q 5.215 0 6.867 0 Q 8.824 0 10.143 0.674 Q 11.461 1.348 12.205 2.531 Q 12.949 3.715 13.16 5.227 L 10.899 5.227 Q 10.746 4.301 10.295 3.539 Q 9.844 2.777 9.012 2.315 Q 8.18 1.852 6.867 1.852 Q 5.684 1.852 4.816 2.285 Q 3.949 2.719 3.387 3.527 Q 2.824 4.336 2.549 5.484 Q 2.274 6.633 2.274 8.074 L 2.274 9.422 Q 2.274 10.899 2.619 12.059 Q 2.965 13.219 3.609 14.033 Q 4.254 14.848 5.15 15.27 Q 6.047 15.692 7.137 15.692 Q 8.344 15.692 9.094 15.486 Q 9.844 15.281 10.266 14.994 Q 10.688 14.707 10.91 14.449 L 10.91 10.629 L 6.961 10.629 L 6.961 8.801 Z" vector-effect="non-scaling-stroke"/></g><path d="m16 20 2 2 4-4"/></svg>

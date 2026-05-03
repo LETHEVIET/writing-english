@@ -12,13 +12,14 @@ from writing_english.config.defaults import (
     DEFAULT_LINE_HEIGHT,
     DEFAULT_WORD_WRAP,
     DEFAULT_SHOW_LINE_NUMBERS,
-    DEFAULT_SPELL_CHECK,
     DEFAULT_GECTOR_MODEL,
     DEFAULT_GECTOR_MODEL_DIR,
     DEFAULT_TYPING_SOUNDS,
     DEFAULT_TYPING_SOUND_PACK,
     DEFAULT_THEME,
     DEFAULT_AUTOSAVE_INTERVAL_MS,
+    DEFAULT_STICKER_REWARDS,
+    DEFAULT_STICKER_FOLDER,
 )
 
 
@@ -96,15 +97,6 @@ class Settings:
         self._set("editor/show_line_numbers", value)
 
     @property
-    def spell_check(self) -> bool:
-        val = self._get("editor/spell_check", DEFAULT_SPELL_CHECK)
-        return str(val).lower() in ("true", "1")
-
-    @spell_check.setter
-    def spell_check(self, value: bool) -> None:
-        self._set("editor/spell_check", value)
-
-    @property
     def typing_sounds(self) -> bool:
         val = self._get("editor/typing_sounds", DEFAULT_TYPING_SOUNDS)
         return str(val).lower() in ("true", "1")
@@ -154,6 +146,23 @@ class Settings:
     @autosave_interval_ms.setter
     def autosave_interval_ms(self, value: int) -> None:
         self._set("general/autosave_interval_ms", value)
+
+    @property
+    def sticker_rewards(self) -> bool:
+        val = self._get("rewards/sticker_rewards", DEFAULT_STICKER_REWARDS)
+        return str(val).lower() in ("true", "1")
+
+    @sticker_rewards.setter
+    def sticker_rewards(self, value: bool) -> None:
+        self._set("rewards/sticker_rewards", value)
+
+    @property
+    def sticker_folder(self) -> str:
+        return str(self._get("rewards/sticker_folder", DEFAULT_STICKER_FOLDER))
+
+    @sticker_folder.setter
+    def sticker_folder(self, value: str) -> None:
+        self._set("rewards/sticker_folder", value)
 
     def _get(self, key: str, default: Any) -> Any:
         return self._qsettings.value(key, default)

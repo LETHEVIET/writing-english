@@ -116,7 +116,7 @@ QStatusBar QToolButton#statusBarButton {
     background: transparent;
     border: none;
     border-radius: 3px;
-    padding: 2px;
+    padding: 2px 6px;
     margin: 2px 2px;
 }
 
