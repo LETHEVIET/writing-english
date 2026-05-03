@@ -75,6 +75,7 @@ class MainWindow(QMainWindow):
         self._editor.stats_changed.connect(self._on_stats_changed)
         self._editor.overwrite_mode_changed.connect(self._status_bar.set_overwrite_mode)
         self._editor.textChanged.connect(self._on_text_changed)
+        self._status_bar.spell_check_toggled.connect(self._on_spell_check_toggled)
         self._prompt_bar.prompt_changed.connect(self._on_prompt_edited)
         self._focus_overlay.exit_focus.connect(self.toggle_focus_mode)
         self._app().styleHints().colorSchemeChanged.connect(self._on_system_theme_changed)
@@ -267,6 +268,12 @@ class MainWindow(QMainWindow):
             self._document.is_modified = True
             self._update_title()
 
+    @Slot(bool)
+    def _on_spell_check_toggled(self, enabled: bool) -> None:
+        self._editor.set_spell_check(enabled)
+        self._ctx.settings.spell_check = enabled
+        self._ctx.settings.sync()
+
     @Slot()
     def _on_system_theme_changed(self) -> None:
         if self._ctx.settings.theme == "system":
@@ -304,6 +311,8 @@ class MainWindow(QMainWindow):
             font.setPointSize(settings.font_size)
         self._editor.setFont(font)
         self._editor.set_show_line_numbers(settings.show_line_numbers)
+        self._editor.set_spell_check(settings.spell_check)
+        self._status_bar.set_spell_check(settings.spell_check)
         if settings.word_wrap:
             self._editor.setLineWrapMode(self._editor.LineWrapMode.WidgetWidth)
         else:

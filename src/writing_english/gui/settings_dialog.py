@@ -63,6 +63,9 @@ class SettingsDialog(QDialog):
         self._show_line_numbers = QCheckBox("Show line numbers")
         editor_layout.addRow(self._show_line_numbers)
 
+        self._spell_check = QCheckBox("Enable spell check")
+        editor_layout.addRow(self._spell_check)
+
         layout.addWidget(editor_group)
 
         appearance_group = QGroupBox("Appearance")
@@ -98,6 +101,7 @@ class SettingsDialog(QDialog):
         self._line_height.setValue(self._settings.line_height)
         self._word_wrap.setChecked(self._settings.word_wrap)
         self._show_line_numbers.setChecked(self._settings.show_line_numbers)
+        self._spell_check.setChecked(self._settings.spell_check)
         self._theme.setCurrentText(self._settings.theme)
         self._autosave_interval.setValue(self._settings.autosave_interval_ms // 1000)
 
@@ -107,6 +111,7 @@ class SettingsDialog(QDialog):
         self._settings.line_height = self._line_height.value()
         self._settings.word_wrap = self._word_wrap.isChecked()
         self._settings.show_line_numbers = self._show_line_numbers.isChecked()
+        self._settings.spell_check = self._spell_check.isChecked()
         self._settings.theme = self._theme.currentText()
         self._settings.autosave_interval_ms = self._autosave_interval.value() * 1000
         self._settings.sync()

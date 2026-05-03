@@ -11,6 +11,7 @@ from writing_english.config.defaults import (
     DEFAULT_LINE_HEIGHT,
     DEFAULT_WORD_WRAP,
     DEFAULT_SHOW_LINE_NUMBERS,
+    DEFAULT_SPELL_CHECK,
     DEFAULT_THEME,
     DEFAULT_AUTOSAVE_INTERVAL_MS,
 )
@@ -61,6 +62,15 @@ class Settings:
     @show_line_numbers.setter
     def show_line_numbers(self, value: bool) -> None:
         self._set("editor/show_line_numbers", value)
+
+    @property
+    def spell_check(self) -> bool:
+        val = self._get("editor/spell_check", DEFAULT_SPELL_CHECK)
+        return str(val).lower() in ("true", "1")
+
+    @spell_check.setter
+    def spell_check(self, value: bool) -> None:
+        self._set("editor/spell_check", value)
 
     @property
     def theme(self) -> str:

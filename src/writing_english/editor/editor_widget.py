@@ -13,6 +13,7 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import QPlainTextEdit, QWidget
 
+from writing_english.editor.editor_highlighter import EditorHighlighter
 from writing_english.editor.editor_theme import EditorColors
 from writing_english.editor.line_number_area import LineNumberArea
 
@@ -33,6 +34,7 @@ class EditorWidget(QPlainTextEdit):
         self._show_line_numbers = False
         self._line_number_area = LineNumberArea(self)
         self._line_number_area.setVisible(False)
+        self._highlighter = EditorHighlighter(self.document())
 
         self._setup_font()
         self._setup_defaults()
@@ -107,6 +109,9 @@ class EditorWidget(QPlainTextEdit):
     @property
     def is_overwrite(self) -> bool:
         return self._overwrite_mode
+
+    def set_spell_check(self, enabled: bool) -> None:
+        self._highlighter.set_spell_check(enabled)
 
     def set_show_line_numbers(self, visible: bool) -> None:
         self._show_line_numbers = visible

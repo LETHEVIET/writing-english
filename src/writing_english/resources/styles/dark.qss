@@ -109,6 +109,26 @@ QStatusBar QLabel {
     font-size: 11px;
 }
 
+QStatusBar QToolButton#statusBarButton {
+    background: transparent;
+    border: none;
+    border-radius: 3px;
+    padding: 2px;
+    margin: 2px 2px;
+}
+
+QStatusBar QToolButton#statusBarButton:hover {
+    background-color: #2D2D30;
+}
+
+QStatusBar QToolButton#statusBarButton:checked {
+    background-color: #1E3A5F;
+}
+
+QStatusBar QToolButton#statusBarButton:checked:hover {
+    background-color: #254B7A;
+}
+
 /* === TOOLTIPS === */
 QToolTip {
     background-color: #2D2D30;
