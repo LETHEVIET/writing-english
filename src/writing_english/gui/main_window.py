@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import QSettings, Slot
+from PySide6.QtCore import Qt, QSettings, Slot
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QMainWindow,
@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QWidget,
     QVBoxLayout,
+    QSplitter,
     QApplication,
     QDialog,
 )
@@ -64,12 +65,22 @@ class MainWindow(QMainWindow):
         self._prompt_bar = PromptBar(self)
         main_layout.addWidget(self._prompt_bar)
 
+        self._splitter = QSplitter(Qt.Orientation.Vertical)
+        self._splitter.setChildrenCollapsible(False)
+        self._splitter.setHandleWidth(4)
+
         self._editor = EditorWidget(self)
-        main_layout.addWidget(self._editor, 1)
+        self._splitter.addWidget(self._editor)
 
         self._analysis = AnalysisWidget(self)
         self._analysis.hide()
-        main_layout.addWidget(self._analysis)
+        self._splitter.addWidget(self._analysis)
+
+        self._splitter.setStretchFactor(0, 1)
+        self._splitter.setStretchFactor(1, 0)
+        self._splitter.setSizes([500, 200])
+
+        main_layout.addWidget(self._splitter, 1)
 
         self._status_bar = StatusBar(self)
         self.setStatusBar(self._status_bar)
@@ -106,6 +117,7 @@ class MainWindow(QMainWindow):
         self._grammar_ctrl.status_changed.connect(self._status_bar.showMessage)
         self._analysis.correction_clicked.connect(self._apply_grammar_correction)
         self._analysis.close_requested.connect(self._hide_analysis)
+        self._editor.gec_error_clicked.connect(self._highlight_analysis_error)
         self._prompt_bar.prompt_changed.connect(self._on_prompt_edited)
         self._focus_overlay.exit_focus.connect(self.toggle_focus_mode)
         self._app().styleHints().colorSchemeChanged.connect(
@@ -329,6 +341,7 @@ class MainWindow(QMainWindow):
                 )
                 return
         self._analysis.show()
+        self._splitter.setSizes([self._splitter.height() - 200, 200])
         self._grammar_ctrl.check_now()
 
     @Slot()
@@ -342,7 +355,9 @@ class MainWindow(QMainWindow):
         self._status_bar.clearMessage()
 
     def _on_grammar_results_ready(self, errors: list) -> None:
-        self._analysis.show()
+        if not self._analysis.isVisible():
+            self._analysis.show()
+            self._splitter.setSizes([self._splitter.height() - 200, 200])
         self._analysis.set_grammar_results(errors)
 
     @Slot(int, int, str)
@@ -359,6 +374,15 @@ class MainWindow(QMainWindow):
     def _hide_analysis(self) -> None:
         self._analysis.hide()
         self._analysis.clear_grammar_results()
+        self._grammar_ctrl.set_autocheck(False)
+        self._editor._highlighter.clear_gec_errors()
+
+    @Slot(int)
+    def _highlight_analysis_error(self, index: int) -> None:
+        if not self._analysis.isVisible():
+            self._analysis.show()
+            self._splitter.setSizes([self._splitter.height() - 200, 200])
+        self._analysis.highlight_error(index)
 
     def _save_layout(self) -> None:
         s = QSettings("WritingEnglish", "Writing English")

@@ -128,6 +128,28 @@ class GrammarSection(QWidget):
         self._empty_label.setText("Click the grammar check button to start.")
         self._empty_label.setVisible(True)
 
+    def highlight_error(self, index: int, scroll_area: QScrollArea | None = None) -> None:
+        self._clear_error_highlight()
+        if 0 <= index < len(self._error_rows):
+            row = self._error_rows[index]
+            row.setObjectName("analysisErrorRowActive")
+            row.style().unpolish(row)
+            row.style().polish(row)
+            if scroll_area is not None:
+                content = scroll_area.widget()
+                if content is not None:
+                    pos_in_content = row.mapTo(content, row.rect().topLeft())
+                    scroll_area.ensureVisible(
+                        0, pos_in_content.y(), 0, row.height() + 20
+                    )
+
+    def _clear_error_highlight(self) -> None:
+        for row in self._error_rows:
+            if row.objectName() == "analysisErrorRowActive":
+                row.setObjectName("analysisErrorRow")
+                row.style().unpolish(row)
+                row.style().polish(row)
+
     def _remove_error_rows(self) -> None:
         for row in self._error_rows:
             row.setParent(None)
@@ -197,32 +219,6 @@ class GrammarSection(QWidget):
         return row
 
 
-class ResizeHandle(QWidget):
-    """A thin draggable bar at the top of the analysis panel for vertical resizing."""
-
-    def __init__(self, parent: QWidget | None = None) -> None:
-        super().__init__(parent)
-        self.setObjectName("analysisResizeHandle")
-        self.setFixedHeight(4)
-        self.setCursor(Qt.CursorShape.SplitVCursor)
-
-    def mousePressEvent(self, event) -> None:
-        if event.button() == Qt.MouseButton.LeftButton:
-            self._drag_start_y = event.globalPosition().toPoint().y()
-            self._start_height = self.parent().height()
-
-    def mouseMoveEvent(self, event) -> None:
-        if not hasattr(self, "_drag_start_y"):
-            return
-        delta = event.globalPosition().toPoint().y() - self._drag_start_y
-        new_h = max(self.parent().minimumHeight(), self._start_height - delta)
-        self.parent().setFixedHeight(new_h)
-
-    def mouseReleaseEvent(self, event) -> None:
-        if hasattr(self, "_drag_start_y"):
-            del self._drag_start_y
-
-
 class AnalysisWidget(QWidget):
     correction_clicked = Signal(int, int, str)
     close_requested = Signal()
@@ -237,9 +233,6 @@ class AnalysisWidget(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
-
-        resize_handle = ResizeHandle(self)
-        layout.addWidget(resize_handle)
 
         header = QWidget()
         header.setObjectName("analysisHeader")
@@ -272,16 +265,11 @@ class AnalysisWidget(QWidget):
 
         layout.addWidget(header)
 
-        line = QFrame()
-        line.setFrameShape(QFrame.Shape.HLine)
-        line.setObjectName("analysisSeparator")
-        layout.addWidget(line)
-
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        scroll.setObjectName("analysisScroll")
+        self._scroll = QScrollArea()
+        self._scroll.setWidgetResizable(True)
+        self._scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self._scroll.setObjectName("analysisScroll")
 
         self._sections_widget = QWidget()
         sections_layout = QVBoxLayout(self._sections_widget)
@@ -297,14 +285,17 @@ class AnalysisWidget(QWidget):
             QSpacerItem(0, 0, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
         )
 
-        scroll.setWidget(self._sections_widget)
-        layout.addWidget(scroll, 1)
+        self._scroll.setWidget(self._sections_widget)
+        layout.addWidget(self._scroll, 1)
 
     def set_grammar_results(self, errors: list[GECError]) -> None:
         self._grammar_section.set_results(errors)
 
     def clear_grammar_results(self) -> None:
         self._grammar_section.clear()
+
+    def highlight_error(self, index: int) -> None:
+        self._grammar_section.highlight_error(index, self._scroll)
 
     def _on_clear(self) -> None:
         self._grammar_section.clear()

@@ -195,14 +195,6 @@ QWidget#analysisWidget {
     background-color: #232629;
 }
 
-QWidget#analysisResizeHandle {
-    background-color: #3A3E44;
-}
-
-QWidget#analysisResizeHandle:hover {
-    background-color: #3DAEE9;
-}
-
 QWidget#analysisHeader {
     background-color: @chrome-bg@;
 }
@@ -230,8 +222,8 @@ QLabel#analysisSuggestion {
 }
 
 QLabel#analysisCountBadge {
-    background-color: #F67400;
-    color: #FFFFFF;
+    background-color: #3A3E44;
+    color: #A4A4A4;
     border-radius: 8px;
     padding: 1px 6px;
     font-size: 10px;
@@ -249,17 +241,23 @@ QFrame#analysisErrorRow {
     border-radius: 4px;
 }
 
+QFrame#analysisErrorRowActive {
+    background-color: #3A3E44;
+    border: 2px solid #3DAEE9;
+    border-radius: 4px;
+}
+
 QPushButton#analysisFixButton {
-    background-color: #1A3A1A;
-    color: #27AE60;
-    border: 1px solid #2E5A2E;
+    background-color: #3A3E44;
+    color: #EFF0F1;
+    border: 1px solid #4A4E52;
     border-radius: 3px;
     font-size: 10px;
     font-weight: bold;
 }
 
 QPushButton#analysisFixButton:hover {
-    background-color: #224A22;
+    background-color: #4A4E52;
 }
 
 QPushButton#analysisClearButton {
@@ -289,10 +287,11 @@ QFrame#analysisSeparator {
     color: #3A3E44;
 }
 
-QSplitter::handle {
+QSplitter::handle:vertical {
     background-color: #3A3E44;
+    height: 4px;
 }
 
-QSplitter::handle:hover {
+QSplitter::handle:vertical:hover {
     background-color: #3DAEE9;
 }

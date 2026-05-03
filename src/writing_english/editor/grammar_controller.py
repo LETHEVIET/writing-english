@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, QTimer, Signal
 
 from writing_english.adapters.base import GECError
 from writing_english.adapters.gec.gector_adapter import GectorAdapter
 from writing_english.adapters.gec.worker import GecWorker
 from writing_english.editor.editor_highlighter import EditorHighlighter
 from writing_english.editor.editor_widget import EditorWidget
+
+_AUTOCHECK_DELAY_MS = 1500
 
 
 class GrammarCheckController(QObject):
@@ -28,20 +30,65 @@ class GrammarCheckController(QObject):
         self._adapter = adapter
         self._worker: GecWorker | None = None
         self._pending_check_text: str = ""
+        self._autocheck_active = False
+        self._autocheck_timer = QTimer(self)
+        self._autocheck_timer.setSingleShot(True)
+        self._autocheck_timer.setInterval(_AUTOCHECK_DELAY_MS)
+        self._autocheck_timer.timeout.connect(self._on_autocheck_timeout)
         self._editor.document().contentsChange.connect(self._on_contents_change)
 
     def set_adapter(self, adapter: GectorAdapter) -> None:
         self._adapter = adapter
 
+    def set_autocheck(self, enabled: bool) -> None:
+        self._autocheck_active = enabled
+        if not enabled:
+            self._autocheck_timer.stop()
+
     def shutdown(self) -> None:
+        self._autocheck_timer.stop()
         if self._worker is not None:
             self._worker.wait(2000)
 
     def _on_contents_change(
-        self, _pos: int, chars_removed: int, chars_added: int
+        self, pos: int, chars_removed: int, chars_added: int
     ) -> None:
         if chars_removed > 0 or chars_added > 0:
-            self._highlighter.clear_gec_errors()
+            self._adjust_gec_positions(pos, chars_removed, chars_added)
+            if self._autocheck_active and self._adapter.is_available():
+                self._autocheck_timer.start()
+
+    def _adjust_gec_positions(
+        self, pos: int, chars_removed: int, chars_added: int
+    ) -> None:
+        errors = self._highlighter.gec_errors
+        if not errors:
+            return
+        delta = chars_added - chars_removed
+        updated: list[GECError] = []
+        for err in errors:
+            start = err["start"]
+            end = start + err["length"]
+            if pos >= end:
+                updated.append(err)
+                continue
+            if pos + chars_removed <= start:
+                updated.append(
+                    GECError(
+                        start=start + delta,
+                        length=err["length"],
+                        original=err["original"],
+                        suggestion=err["suggestion"],
+                        message=err["message"],
+                        category=err["category"],
+                    )
+                )
+                continue
+            updated.append(err)
+        self._highlighter.set_gec_errors(updated)
+
+    def _on_autocheck_timeout(self) -> None:
+        self.check_now()
 
     def check_now(self) -> None:
         doc = self._editor.document()
@@ -57,6 +104,7 @@ class GrammarCheckController(QObject):
 
         self.check_started.emit()
         self._highlighter.set_gec_enabled(True)
+        self._autocheck_active = True
         self._worker = GecWorker(self._adapter, text)
         self._worker.results_ready.connect(self._on_results)
         self._worker.error_occurred.connect(self._on_error)

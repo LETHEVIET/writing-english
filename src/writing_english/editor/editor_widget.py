@@ -29,6 +29,7 @@ class EditorWidget(QPlainTextEdit):
     overwrite_mode_changed = Signal(bool)
     cursor_position = Signal(int, int)
     stats_changed = Signal(int, int, int)
+    gec_error_clicked = Signal(int)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -136,6 +137,16 @@ class EditorWidget(QPlainTextEdit):
                 )
                 break
         menu.exec(event.globalPos())
+
+    def mousePressEvent(self, event) -> None:
+        super().mousePressEvent(event)
+        if event.button() == Qt.MouseButton.LeftButton and self._highlighter.gec_errors:
+            cursor = self.cursorForPosition(event.pos())
+            pos = cursor.position()
+            for i, err in enumerate(self._highlighter.gec_errors):
+                if err["start"] <= pos < err["start"] + err["length"]:
+                    self.gec_error_clicked.emit(i)
+                    break
 
     def _apply_gec_correction(self, err: GECError) -> None:
         cursor = QTextCursor(self.document())
