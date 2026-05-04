@@ -23,6 +23,7 @@ def build() -> None:
         sys.executable,
         "-m",
         "nuitka",
+        "--assume-yes-for-downloads",
         "--standalone",
         "--onefile",
         "--enable-plugin=pyside6",
@@ -32,7 +33,7 @@ def build() -> None:
     ]
 
     if SYSTEM == "Windows":
-        cmd.insert(cmd.index("--standalone"), "--windows-disable-console")
+        cmd.insert(cmd.index("--standalone"), "--windows-console-mode=disable")
         cmd.extend(["--output-filename=WritingEnglish.exe"])
     elif SYSTEM == "Darwin":
         cmd.extend(
