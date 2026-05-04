@@ -51,7 +51,21 @@ def build() -> None:
     print(f"Command: {' '.join(cmd)}")
     subprocess.run(cmd, check=True)
 
+    _cleanup_build_artifacts()
+
     print(f"Build complete: {DIST_DIR}")
+
+
+def _cleanup_build_artifacts() -> None:
+    import shutil
+
+    for item in DIST_DIR.iterdir():
+        if item.is_dir() and item.name.endswith((".build", ".dist", ".onefile-build")):
+            shutil.rmtree(item)
+
+    for item in DIST_DIR.iterdir():
+        if item.is_file() and item.suffix in (".c", ".obj", ".h"):
+            item.unlink()
 
 
 if __name__ == "__main__":
