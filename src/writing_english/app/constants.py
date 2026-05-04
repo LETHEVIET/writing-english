@@ -2,7 +2,7 @@ from pathlib import Path
 import json
 
 APP_NAME = "Writing English"
-APP_VERSION = "0.1.0"
+APP_VERSION = "0.1.1"
 ORG_NAME = "WritingEnglish"
 
 # XDG-style paths config lives outside the app data dir so it survives relocation.
