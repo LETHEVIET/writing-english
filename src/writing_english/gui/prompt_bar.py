@@ -76,14 +76,14 @@ class PromptBar(QWidget):
         self.setFixedHeight(bar_h)
 
         # Force our internal layout to give the input the new height
-        self.layout().invalidate()
-        self.layout().activate()
+        self.layout().invalidate()  # type: ignore[union-attr]
+        self.layout().activate()  # type: ignore[union-attr]
 
         # Force the MainWindow layout to reallocate space
         main = self.parent()
-        if main is not None and main.layout() is not None:
-            main.layout().invalidate()
-            main.layout().activate()
+        if main is not None and main.layout() is not None:  # type: ignore[attr-defined]
+            main.layout().invalidate()  # type: ignore[attr-defined]
+            main.layout().activate()  # type: ignore[attr-defined]
 
     def _on_text_changed(self) -> None:
         self.prompt_changed.emit(self._input.toPlainText())

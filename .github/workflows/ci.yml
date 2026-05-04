@@ -24,7 +24,7 @@ jobs:
           python-version: "3.14"
 
       - name: Install dependencies
-        run: uv sync --extra dev
+        run: uv sync --all-extras
 
       - name: Ruff check
         run: uv run ruff check .
@@ -44,7 +44,7 @@ jobs:
           python-version: "3.14"
 
       - name: Install dependencies
-        run: uv sync --extra dev
+        run: uv sync --all-extras
 
       - name: mypy
         run: uv run mypy src/writing_english
@@ -125,7 +125,7 @@ jobs:
           python-version: "3.14"
 
       - name: Install dependencies
-        run: uv sync --extra dev
+        run: uv sync --all-extras
 
       - name: Build with Nuitka
         run: uv run python scripts/build.py
@@ -149,7 +149,7 @@ jobs:
           python-version: "3.14"
 
       - name: Install dependencies
-        run: uv sync --extra dev
+        run: uv sync --all-extras
 
       - name: Build with Nuitka
         run: uv run python scripts/build.py

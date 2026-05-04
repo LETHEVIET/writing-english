@@ -39,7 +39,7 @@ class _DownloadThread(QThread):
             self.progress.emit(30, "Downloading ONNX model from HuggingFace...")
             from huggingface_hub import snapshot_download
 
-            snapshot_download(
+            snapshot_download(  # type: ignore[call-overload]
                 repo_id=self._settings.gector_model
                 or "letheviet/gector-roberta-base-5k-onnx",
                 local_dir=str(GECTOR_ONNX_DIR),

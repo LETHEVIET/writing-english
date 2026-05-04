@@ -29,7 +29,7 @@ _CATEGORIES: dict[str, tuple[str, str]] = {
 }
 
 
-def _classify_error(original: str, suggestion: str) -> tuple[str, str]:
+def _classify_error(original: str, suggestion: str) -> tuple[str, tuple[str, str]]:
     orig_lower = original.lower().strip()
     sugg_lower = suggestion.lower().strip()
 

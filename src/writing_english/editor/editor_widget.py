@@ -193,7 +193,7 @@ class EditorWidget(QPlainTextEdit):
         super().setPlainText(text)
         self._apply_block_format()
 
-    def setFont(self, font: QFont) -> None:
+    def setFont(self, font: QFont) -> None:  # type: ignore[override]
         super().setFont(font)
         self.setTabStopDistance(self.fontMetrics().horizontalAdvance(" ") * 4)
         self._update_text_margins()

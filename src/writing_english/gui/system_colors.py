@@ -50,7 +50,7 @@ def _read_kde_wm_colors() -> tuple[str | None, str | None]:
 def get_system_theme() -> str:
     app = QGuiApplication.instance()
     if app is not None:
-        if app.styleHints().colorScheme() == Qt.ColorScheme.Dark:
+        if app.styleHints().colorScheme() == Qt.ColorScheme.Dark:  # type: ignore[attr-defined]
             return "dark"
     return "light"
 
