@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Build a distributable executable with Nuitka."""
+"""Build a distributable executable with PyInstaller."""
 
 from __future__ import annotations
 
 import platform
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -19,53 +20,35 @@ SYSTEM = platform.system()
 def build() -> None:
     DIST_DIR.mkdir(exist_ok=True)
 
+    sep = ";" if SYSTEM == "Windows" else ":"
+    add_data = f"{RESOURCES_DIR}{sep}resources"
+
     cmd = [
         sys.executable,
         "-m",
-        "nuitka",
-        "--assume-yes-for-downloads",
-        "--standalone",
+        "PyInstaller",
         "--onefile",
-        "--enable-plugin=pyside6",
-        "--lto=no",
-        f"--include-data-dir={RESOURCES_DIR}=resources",
-        f"--output-dir={DIST_DIR}",
+        "--windowed",
+        "--clean",
+        f"--add-data={add_data}",
+        "--name=WritingEnglish",
+        f"--distpath={DIST_DIR}",
+        "--workpath=build",
+        "--specpath=build",
         str(SRC_DIR / "main.py"),
     ]
 
-    if SYSTEM == "Windows":
-        cmd.insert(cmd.index("--standalone"), "--windows-console-mode=disable")
-        cmd.extend(["--output-filename=WritingEnglish.exe"])
-    elif SYSTEM == "Darwin":
-        cmd.extend(
-            [
-                "--output-filename=WritingEnglish",
-                "--macos-create-app-bundle",
-                "--macos-app-name=Writing English",
-            ]
-        )
-    else:
-        cmd.extend(["--output-filename=WritingEnglish"])
-
     print(f"Building for {SYSTEM}...")
-    print(f"Command: {' '.join(cmd)}")
     subprocess.run(cmd, check=True)
 
-    _cleanup_build_artifacts()
-
+    _cleanup()
     print(f"Build complete: {DIST_DIR}")
 
 
-def _cleanup_build_artifacts() -> None:
-    import shutil
-
-    for item in DIST_DIR.iterdir():
-        if item.is_dir() and item.name.endswith((".build", ".dist", ".onefile-build")):
-            shutil.rmtree(item)
-
-    for item in DIST_DIR.iterdir():
-        if item.is_file() and item.suffix in (".c", ".obj", ".h"):
-            item.unlink()
+def _cleanup() -> None:
+    build_dir = PROJECT_ROOT / "build"
+    if build_dir.exists():
+        shutil.rmtree(build_dir)
 
 
 if __name__ == "__main__":

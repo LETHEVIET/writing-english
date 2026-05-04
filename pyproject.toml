@@ -25,7 +25,7 @@ dev = [
     "pytest-qt>=4.0",
     "ruff>=0.9.0",
     "mypy>=1.14.0",
-    "nuitka>=2.6",
+    "pyinstaller>=6.0",
     "types-PyYAML>=6.0",
 ]
 
