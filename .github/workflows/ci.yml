@@ -183,6 +183,6 @@ jobs:
           draft: true
           generate_release_notes: true
           files: |
-            dist/writing-english-linux/WritingEnglish
-            dist/writing-english-windows/WritingEnglish.exe
-            dist/writing-english-macos/WritingEnglish
+            dist/writing-english-linux/WritingEnglish-linux-*
+            dist/writing-english-windows/WritingEnglish-windows-*.exe
+            dist/writing-english-macos/WritingEnglish-macos-*

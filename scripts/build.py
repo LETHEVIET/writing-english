@@ -15,6 +15,16 @@ DIST_DIR = PROJECT_ROOT / "dist"
 RESOURCES_DIR = SRC_DIR / "resources"
 
 SYSTEM = platform.system()
+_MACHINE = platform.machine().lower()
+
+_SUFFIX_MAP = {
+    "Linux": "linux",
+    "Windows": "windows",
+    "Darwin": "macos",
+}
+
+_PLATFORM_SUFFIX = _SUFFIX_MAP.get(SYSTEM, "unknown")
+_BINARY_NAME = f"WritingEnglish-{_PLATFORM_SUFFIX}-{_MACHINE}"
 
 
 def build() -> None:
@@ -30,7 +40,7 @@ def build() -> None:
         "--onefile",
         "--clean",
         f"--add-data={add_data}",
-        "--name=WritingEnglish",
+        f"--name={_BINARY_NAME}",
         f"--distpath={DIST_DIR}",
         "--workpath=build",
         "--specpath=build",
@@ -40,7 +50,7 @@ def build() -> None:
     if SYSTEM == "Windows":
         cmd.insert(cmd.index("--onefile"), "--windowed")
 
-    print(f"Building for {SYSTEM}...")
+    print(f"Building for {SYSTEM} ({_MACHINE})...")
     subprocess.run(cmd, check=True)
 
     _cleanup()
