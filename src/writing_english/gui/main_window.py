@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from writing_english.app.context import AppContext
-from writing_english.app.constants import APP_NAME, GECTOR_ONNX_DIR
+from writing_english.app.constants import APP_NAME, APP_VERSION, GECTOR_ONNX_DIR
 from writing_english.core.document import Document
 from writing_english.editor.editor_widget import EditorWidget
 from writing_english.editor.editor_theme import get_colors
@@ -29,9 +29,11 @@ from writing_english.gui.settings_dialog import SettingsDialog
 from writing_english.gui.analysis_widget import AnalysisWidget
 from writing_english.gui.sticker_reward import StickerRewardController
 from writing_english.adapters.gec.gector_adapter import GectorAdapter
+from writing_english.adapters.base import GECError
 from writing_english.editor.grammar_controller import GrammarCheckController
 from writing_english.editor.typing_sounds import TypingSoundManager
 from writing_english.infrastructure.autosave import AutosaveManager
+from writing_english.infrastructure import updater
 
 
 class MainWindow(QMainWindow):
@@ -137,7 +139,9 @@ class MainWindow(QMainWindow):
         self._status_bar.sticker_rewards_toggled.connect(
             self._on_sticker_rewards_toggled
         )
-        self._editor.sentence_completed.connect(self._sticker_rewards.show_random_sticker)
+        self._editor.sentence_completed.connect(
+            self._sticker_rewards.show_random_sticker
+        )
         self._focus_overlay.exit_focus.connect(self.toggle_focus_mode)
         self._app().styleHints().colorSchemeChanged.connect(
             self._on_system_theme_changed
@@ -156,7 +160,10 @@ class MainWindow(QMainWindow):
         self._connect_action("toggle_line_numbers", self.toggle_line_numbers)
         self._connect_action("toggle_word_wrap", self.toggle_word_wrap)
         self._connect_action("settings", self.open_settings)
+        self._connect_action("check_updates", self._check_for_updates)
         self._connect_action("about", self.show_about)
+
+        QTimer.singleShot(3000, self._auto_check_for_updates)
 
     def _connect_action(self, name: str, slot: object) -> None:
         action = self._menu_bar.get_action(name)
@@ -291,9 +298,65 @@ class MainWindow(QMainWindow):
             self,
             "About Writing English",
             "<h3>Writing English</h3>"
-            "<p>Version 0.1.0</p>"
+            f"<p>Version {APP_VERSION}</p>"
             "<p>A focused English writing practice desktop app.</p>",
         )
+
+    def _auto_check_for_updates(self) -> None:
+        if not self._ctx.settings.check_for_updates:
+            return
+        self._check_for_updates(silent=True)
+
+    def _check_for_updates(self, *, silent: bool = False) -> None:
+        repo_slug = updater._get_repo_slug()
+        if repo_slug is None:
+            if not silent:
+                QMessageBox.information(
+                    self,
+                    "Check for Updates",
+                    "Could not determine the GitHub repository.\n"
+                    "Please visit the project page to check for updates manually.",
+                )
+            return
+        parts = repo_slug.split("/")
+        if len(parts) != 2:
+            return
+        owner, repo = parts
+
+        last_check = self._ctx.settings.get_last_update_check()
+        info = updater.check_for_update(owner, repo, last_check=last_check)
+        self._ctx.settings.set_last_update_check()
+        self._ctx.settings.sync()
+
+        if info is None:
+            if not silent:
+                QMessageBox.information(
+                    self,
+                    "Check for Updates",
+                    "You are running the latest version.",
+                )
+            return
+
+        self._show_update_dialog(info)
+
+    def _show_update_dialog(self, info: updater.UpdateInfo) -> None:
+        msg = QMessageBox(self)
+        msg.setWindowTitle("Update Available")
+        msg.setIcon(QMessageBox.Icon.Information)
+        msg.setText(f"<b>Writing English {info.version}</b> is available!")
+        msg.setInformativeText(
+            f"You are running version {APP_VERSION}.\n\n"
+            f"<b>What's new:</b><br>{info.body[:500]}"
+        )
+        download_btn = msg.addButton("Download", QMessageBox.ButtonRole.AcceptRole)
+        msg.addButton("Remind Later", QMessageBox.ButtonRole.RejectRole)
+        msg.exec()
+
+        if msg.clickedButton() == download_btn:
+            from PySide6.QtGui import QDesktopServices
+            from PySide6.QtCore import QUrl
+
+            QDesktopServices.openUrl(QUrl(info.html_url))
 
     def closeEvent(self, event: QCloseEvent) -> None:
         if self._document.is_modified:
@@ -416,7 +479,7 @@ class MainWindow(QMainWindow):
         self._status_bar.set_grammar_loading(False)
         self._status_bar.clearMessage()
 
-    def _on_grammar_results_ready(self, errors: list) -> None:
+    def _on_grammar_results_ready(self, errors: list[GECError]) -> None:
         if not self._analysis.isVisible():
             self._analysis.show()
             self._splitter.setSizes([self._splitter.height() - 200, 200])

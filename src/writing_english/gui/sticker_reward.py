@@ -84,28 +84,28 @@ class StickerRewardController(QObject):
 
         # Animation Group: fade out and move up
         anim_group = QParallelAnimationGroup(label)
-        
+
         fade_anim = QPropertyAnimation(label, b"opacity")
         fade_anim.setDuration(2500)
         fade_anim.setStartValue(1.0)
         fade_anim.setEndValue(0.0)
         fade_anim.setEasingCurve(QEasingCurve.Type.InQuad)
-        
+
         move_anim = QPropertyAnimation(label, b"pos")
         move_anim.setDuration(2500)
         move_anim.setStartValue(QPoint(x, y))
         move_anim.setEndValue(QPoint(x, y - 80))
         move_anim.setEasingCurve(QEasingCurve.Type.OutQuad)
-        
+
         anim_group.addAnimation(fade_anim)
         anim_group.addAnimation(move_anim)
-        
+
         self._active_animations.append(anim_group)
-        
+
         def cleanup() -> None:
             if anim_group in self._active_animations:
                 self._active_animations.remove(anim_group)
             label.deleteLater()
-            
+
         anim_group.finished.connect(cleanup)
         anim_group.start()

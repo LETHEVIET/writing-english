@@ -168,4 +168,3 @@ class StatusBar(QStatusBar):
         else:
             btn.setIcon(load_svg_icon("grammar-check", color="#7A7C7F"))
             btn.setToolTip("Grammar check")
-

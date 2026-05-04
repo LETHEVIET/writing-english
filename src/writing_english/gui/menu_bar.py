@@ -99,6 +99,8 @@ class MenuBar(QMenuBar):
         )
 
     def _build_help_menu(self) -> None:
+        self._add_action("check_updates", "Check for &Updates", None, self._help_menu)
+        self._help_menu.addSeparator()
         self._add_action("about", "&About", None, self._help_menu)
 
     def _add_action(

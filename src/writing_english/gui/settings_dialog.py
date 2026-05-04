@@ -109,6 +109,9 @@ class SettingsDialog(QDialog):
         self._autosave_interval.setSingleStep(5)
         general_layout.addRow("Auto-save Interval:", self._autosave_interval)
 
+        self._check_for_updates = QCheckBox("Check for updates on startup")
+        general_layout.addRow(self._check_for_updates)
+
         layout.addWidget(general_group)
 
         rewards_group = QGroupBox("Rewards")
@@ -189,6 +192,7 @@ class SettingsDialog(QDialog):
         self._typing_sound_pack.setCurrentText(self._settings.typing_sound_pack)
         self._theme.setCurrentText(self._settings.theme)
         self._autosave_interval.setValue(self._settings.autosave_interval_ms // 1000)
+        self._check_for_updates.setChecked(self._settings.check_for_updates)
         self._sticker_rewards.setChecked(self._settings.sticker_rewards)
         self._sticker_folder.setText(self._settings.sticker_folder)
         self._app_data_dir.setText(self._settings.app_data_dir)
@@ -204,6 +208,7 @@ class SettingsDialog(QDialog):
         self._settings.typing_sound_pack = self._typing_sound_pack.currentText()
         self._settings.theme = self._theme.currentText()
         self._settings.autosave_interval_ms = self._autosave_interval.value() * 1000
+        self._settings.check_for_updates = self._check_for_updates.isChecked()
         self._settings.sticker_rewards = self._sticker_rewards.isChecked()
         self._settings.sticker_folder = self._sticker_folder.text()
 

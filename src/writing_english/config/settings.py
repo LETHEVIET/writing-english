@@ -6,6 +6,8 @@ from typing import Any
 from PySide6.QtCore import QSettings
 
 from writing_english.app.constants import APP_DATA_DIR, SETTINGS_PATH, _PATHS_CONFIG
+from datetime import datetime, timezone
+
 from writing_english.config.defaults import (
     DEFAULT_FONT_FAMILY,
     DEFAULT_FONT_SIZE,
@@ -20,6 +22,7 @@ from writing_english.config.defaults import (
     DEFAULT_AUTOSAVE_INTERVAL_MS,
     DEFAULT_STICKER_REWARDS,
     DEFAULT_STICKER_FOLDER,
+    DEFAULT_CHECK_FOR_UPDATES,
 )
 
 
@@ -169,6 +172,29 @@ class Settings:
 
     def _set(self, key: str, value: Any) -> None:
         self._qsettings.setValue(key, value)
+
+    @property
+    def check_for_updates(self) -> bool:
+        val = self._get("general/check_for_updates", DEFAULT_CHECK_FOR_UPDATES)
+        return str(val).lower() in ("true", "1")
+
+    @check_for_updates.setter
+    def check_for_updates(self, value: bool) -> None:
+        self._set("general/check_for_updates", value)
+
+    def get_last_update_check(self) -> datetime | None:
+        ts = self._get("updater/last_check", None)
+        if ts is None:
+            return None
+        try:
+            return datetime.fromisoformat(str(ts))
+        except ValueError, TypeError:
+            return None
+
+    def set_last_update_check(self, dt: datetime | None = None) -> None:
+        if dt is None:
+            dt = datetime.now(timezone.utc)
+        self._set("updater/last_check", dt.isoformat())
 
     def sync(self) -> None:
         self._qsettings.sync()
