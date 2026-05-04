@@ -27,6 +27,7 @@ def build() -> None:
         "--standalone",
         "--onefile",
         "--enable-plugin=pyside6",
+        "--lto=no",
         f"--include-data-dir={RESOURCES_DIR}=resources",
         f"--output-dir={DIST_DIR}",
         str(SRC_DIR / "main.py"),
