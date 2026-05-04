@@ -222,6 +222,17 @@ class EditorWidget(QPlainTextEdit):
         if self._overwrite_mode and not event.text():
             super().keyPressEvent(event)
             return
+        if self._overwrite_mode and event.text():
+            cursor = self.textCursor()
+            if (
+                not cursor.atEnd()
+                and cursor.block().length() > cursor.positionInBlock()
+            ):
+                cursor.movePosition(
+                    QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor
+                )
+        super().keyPressEvent(event)
+
         is_sound_key = event.text() or event.key() in (
             Qt.Key.Key_Backspace,
             Qt.Key.Key_Return,
@@ -240,16 +251,6 @@ class EditorWidget(QPlainTextEdit):
                 self.typing_sound.emit("backspace")
             else:
                 self.typing_sound.emit("key")
-        if self._overwrite_mode and event.text():
-            cursor = self.textCursor()
-            if (
-                not cursor.atEnd()
-                and cursor.block().length() > cursor.positionInBlock()
-            ):
-                cursor.movePosition(
-                    QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor
-                )
-        super().keyPressEvent(event)
 
         # Sentence completion detection
         if event.key() in (Qt.Key.Key_Space, Qt.Key.Key_Return):
