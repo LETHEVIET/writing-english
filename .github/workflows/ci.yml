@@ -92,18 +92,17 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install system deps for Nuitka + Qt
+      - name: Install system deps for Qt
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq \
-            libegl1 libgl1 libxkbcommon0 libdbus-1-3 \
-            patchelf ccache
+            libegl1 libgl1 libxkbcommon0 libdbus-1-3
 
       - name: Install dependencies
         run: |
           uv sync --all-extras
 
-      - name: Build with Nuitka
+      - name: Build with PyInstaller
         run: |
           uv run python scripts/build.py
 
@@ -129,7 +128,7 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras
 
-      - name: Build with Nuitka
+      - name: Build with PyInstaller
         run: uv run python scripts/build.py
 
       - name: Upload artifact
@@ -151,13 +150,10 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install ccache
-        run: brew install ccache
-
       - name: Install dependencies
         run: uv sync --all-extras
 
-      - name: Build with Nuitka
+      - name: Build with PyInstaller
         run: uv run python scripts/build.py
 
       - name: Upload artifact
@@ -189,5 +185,4 @@ jobs:
           files: |
             dist/writing-english-linux/WritingEnglish
             dist/writing-english-windows/WritingEnglish.exe
-            dist/writing-english-macos/WritingEnglish.app
             dist/writing-english-macos/WritingEnglish

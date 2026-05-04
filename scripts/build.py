@@ -28,7 +28,6 @@ def build() -> None:
         "-m",
         "PyInstaller",
         "--onefile",
-        "--windowed",
         "--clean",
         f"--add-data={add_data}",
         "--name=WritingEnglish",
@@ -37,6 +36,9 @@ def build() -> None:
         "--specpath=build",
         str(SRC_DIR / "main.py"),
     ]
+
+    if SYSTEM == "Windows":
+        cmd.insert(cmd.index("--onefile"), "--windowed")
 
     print(f"Building for {SYSTEM}...")
     subprocess.run(cmd, check=True)
@@ -49,6 +51,10 @@ def _cleanup() -> None:
     build_dir = PROJECT_ROOT / "build"
     if build_dir.exists():
         shutil.rmtree(build_dir)
+
+    for item in DIST_DIR.iterdir():
+        if item.is_dir():
+            shutil.rmtree(item)
 
 
 if __name__ == "__main__":
